@@ -420,15 +420,17 @@ public partial class CustomerController : BasePublicController
     //available even when navigation is not allowed
     [CheckAccessPublicStore(ignore: true)]
     public virtual async Task<IActionResult> Login(bool? checkoutAsGuest)
+    
     {
         var model = await _customerModelFactory.PrepareLoginModelAsync(checkoutAsGuest);
         var customer = await _workContext.GetCurrentCustomerAsync();
 
         if (await _customerService.IsRegisteredAsync(customer))
         {
-            var fullName = await _customerService.GetCustomerFullNameAsync(customer);
-            var message = await _localizationService.GetResourceAsync("Account.Login.AlreadyLogin");
-            _notificationService.SuccessNotification(string.Format(message, _htmlEncoder.Encode(fullName)));
+            //var fullName = await _customerService.GetCustomerFullNameAsync(customer);
+            //var message = await _localizationService.GetResourceAsync("Account.Login.AlreadyLogin");
+            //_notificationService.SuccessNotification(string.Format(message, _htmlEncoder.Encode(fullName)));
+            return new RedirectToRouteResult("Admin", null);
         }
 
         return View(model);
@@ -459,11 +461,12 @@ public partial class CustomerController : BasePublicController
             {
                 case CustomerLoginResults.Successful:
                 {
-                    var customer = _customerSettings.UsernamesEnabled
-                        ? await _customerService.GetCustomerByUsernameAsync(customerUserName)
-                        : await _customerService.GetCustomerByEmailAsync(customerEmail);
+                        //var customer = _customerSettings.UsernamesEnabled
+                        //    ? await _customerService.GetCustomerByUsernameAsync(customerUserName)
+                        //    : await _customerService.GetCustomerByEmailAsync(customerEmail);
+                        var customer = await _customerService.GetCustomerByEmailAsync(customerEmail);
 
-                    return await _customerRegistrationService.SignInCustomerAsync(customer, returnUrl, model.RememberMe);
+                        return await _customerRegistrationService.SignInCustomerAsync(customer, returnUrl, model.RememberMe);
                 }
                 case CustomerLoginResults.MultiFactorAuthenticationRequired:
                 {

@@ -1,0 +1,482 @@
+@font-face {
+    font-family: 'Karla';
+    src:url('./../fonts/Karla-Medium.ttf') format('truetype'),
+        url('./../fonts/Karla-Medium.svg#Karla-Medium') format('svg');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Karla';
+    src:url('./../fonts/Karla-Bold.ttf') format('truetype'),
+        url('./../fonts/Karla-Bold.svg#Karla-Bold') format('svg');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Karla';
+    src:url('./../fonts/Karla-Regular.ttf') format('truetype'),
+        url('./../fonts/Karla-Regular.svg#Karla-Regular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Karla';
+    src:url('./../fonts/Karla-SemiBold.ttf') format('truetype'),
+        url('./../fonts/Karla-SemiBold.svg#Karla-SemiBold') format('svg');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Karla';
+    src:url('./../fonts/Karla-Light.ttf') format('truetype'),
+        url('./../fonts/Karla-Light.svg#Karla-Light') format('svg');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+body{
+    padding: 0px;
+    margin: 0px;
+    font-size: 14px;    
+    font-weight: normal;
+    font-family: 'Karla',sans-serif;
+}
+.login-af-area {
+    position: relative;
+    background-image: url(./../images/AksharFurnitureMart.jpg);
+    /*background-color: #fff;*/
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    width: 100%;
+    height: 100vh;
+    padding: 15px;
+    box-sizing: border-box;
+}
+.login-af-area .login-box-area {
+    width: 550px;
+    max-width: 90%;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%,-50%);
+    -webkit-transform: translate(-50%,-50%);
+    -moz-transform: translate(-50%,-50%);
+    border-radius: 20px;
+}
+.login-box-area .logo-section {
+    background-color: #fff;
+    padding: 0px;
+    text-align: center;
+    border-radius: 20px 20px 0px 0px;
+}
+.login-box-area .logo-section img{
+    width: 11rem;
+    height:100px;
+}
+.login-box-area .form-section {
+    background-color: #032236;
+    padding: 3.7rem;        
+    border-radius: 0px 0px 20px 20px;
+}
+.login-box-area .form-section h3 {
+    font-size: 2.5rem;
+    margin: 0px 0px 3rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #fff;
+    text-align: center;
+}
+.login-box-area .form-section .form-group {
+    margin-bottom: 20px;
+    position: relative;
+    width: 100%;
+}
+.login-box-area .form-section .form-group input {
+    padding: 1.2rem 1.2rem 1.2rem 2.7rem;
+    font-size: 16px;
+    /* height: 60px; */
+    background-color: #fff;
+    box-sizing: border-box;
+    color: #000;    
+    width: 100%;
+    max-width: -webkit-fill-available;
+    border-radius: 10px;
+    border: none;
+}
+    .login-box-area .form-section .form-group .field-validation-error {
+        color: #ff9ab2;
+        display: block;
+        padding: 6px 0 0;
+    }
+.login-box-area .form-section .link-register-carrierapplication {
+    margin-top:15px;
+    text-align:center;
+}
+.login-box-area .form-section .link-register-carrierapplication a {
+    font-size: 16px;
+    color: #fff;
+    font-weight: normal;
+    text-decoration:none;
+}
+.message-error {
+    display: block;
+    color: #ff9ab2;
+    padding: 0 0 20px;
+    font-weight: 600;
+}
+    .message-error ul {
+        margin: 0;
+        padding: 12px 0 0 17px;
+        font-weight: 400;
+    }
+    .login-box-area .form-section .form-group input::placeholder {
+        color: #77777A;
+    }
+.login-box-area .form-section .form-group input:focus,
+.login-box-area .form-section .form-group input:hover {
+    outline: none;
+    box-shadow: none;
+}
+    .login-box-area .form-section .form-group svg {
+        position: absolute;
+        width: 20px;
+        height: auto;
+        max-height: 20px;
+        max-width: fit-content;
+        left: 11px;
+        top: 18px;
+        /*transform: translateY(-50%);*/
+    }
+.login-box-area .form-section .links-area-box {
+    display: flex;
+    flex: 0 0 100%;
+    max-width: 100%;
+    justify-content: space-between;
+}
+.login-box-area .form-section .links-area-box .remember-box{
+    display: flex;
+    align-items: center;
+}
+.login-box-area .form-section .links-area-box .remember-box label {
+    color: #fff;
+    font-size: 16px;
+    font-weight: normal;
+}
+    .login-box-area .form-section .links-area-box .remember-box input {
+        width: 16px;
+        height: 16px;
+        margin: 0px;
+        margin-right: 8px;
+        accent-color: #d0cfcd;
+        background-color: transparent;
+        border-color: #d0cfcd;
+    }
+.login-box-area .form-section .links-area-box .forgot-box a {
+        font-size: 16px;
+        color: #fff;
+        font-weight: normal;
+        text-align: right;
+        text-decoration: none;
+}
+.login-box-area .form-section .login-btn {
+  padding: 1.15rem;
+  font-size: 1.2rem;
+  font-weight: bold;  
+  color: #fff;
+  border: 1.2px solid #fff;
+  background-color: transparent;
+  border-radius: 10px;
+  text-transform: uppercase;
+  width: 100%;
+  margin-top: 10px;
+  box-sizing: border-box;
+  display: inline-block;
+  cursor: pointer;
+}
+.login-box-area .form-section .login-btn:hover,
+.login-box-area .form-section .login-btn:focus {
+    box-shadow: 0px 1px 6px 0px #2e2d2d8f;
+}
+.bar-notification {    
+    padding: 10px 15px;
+    font-size: 15px;
+    line-height: 1.8;
+}
+.error {
+    color: #842029;
+    background-color: #f8d7da;
+    border-color: #f5c2c7;
+}
+.bar-notification p {
+    margin:0px;
+}
+    .password-recover-area {
+    text-align: center;
+}
+.password-recover-area h3 {
+    font-size:2.1rem;
+    padding-bottom:10px;
+    border-bottom:1px solid #cdcdcd;
+}
+.password-recover-area p {
+    font-size: 15px;
+    text-align: center;
+}
+.password-recover-area a {
+    text-decoration:none;
+    font-size:15px;
+    padding: 8px 15px;
+    background-color: #1B6EAD;
+    color:#fff;
+    margin: 10px auto;
+    border-radius:5px;
+    display:inline-block;
+}
+
+    @media screen and (max-width:1500px) {
+        .login-box-area .logo-section img {
+        width: 10rem;        
+    }
+    .login-box-area .form-section {   
+        padding: 3.1rem;
+    }
+    .login-box-area .form-section h3 {
+        font-size: 2.3rem;
+        margin: 0px 0px 2rem;
+    }    
+}
+@media screen and (max-width:1366px) {    
+    .login-af-area .login-box-area { width: 500px; }
+    .login-box-area .form-section .form-group input { padding: 1rem 1rem 1rem 2.7rem; }
+    .login-box-area .form-section .login-btn { padding: 0.82rem; }
+}
+@media screen and (max-width:1280px) {
+    .login-af-area .login-box-area { width: 470px; }
+    .login-box-area .form-section h3 { font-size: 2rem; }    
+}
+@media screen and (max-width:992px) {
+    .login-af-area .login-box-area { width: 420px; }
+    .login-box-area .logo-section img { width: 8rem; }
+}
+@media screen and (max-width:768px) { }
+@media screen and (max-width:650px) { 
+    .login-box-area .form-section { padding: 2.1rem; }
+    .login-box-area .form-section .form-group input { padding: 0.75rem 0.75rem 0.75rem 2.7rem; }
+    .login-box-area .form-section .login-btn { padding: 0.6rem;font-size: 1rem; }
+    
+}
+@media screen and (max-width:420px) { 
+    
+}
+@media screen and (max-width:380px) { 
+    .login-box-area .form-section .links-area-box{
+        flex-direction: column;        
+    }
+    .login-box-area .form-section .links-area-box .forgot-box {
+        margin-left: auto;
+    }
+}
+
+
+/*-------- Carrier Setup start ---------*/
+.carrier-pg {
+    font-size: 14px !important;
+}
+
+    .carrier-pg h3 {
+        font-size: 24px;
+        font-weight: bold;
+        font-family: sans-serif;
+    }
+
+    .carrier-pg h4 {
+        font-size: 22px;
+        font-weight: bold;
+        font-family: sans-serif;
+    }
+
+    .carrier-pg .carrier-bg-area {
+        position: relative;
+        background-image: url(https://anew.sigmasolve.com/Themes/DefaultClean/Content/images/bg2.png);
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background-size: cover;
+        width: 100%;
+        height: 100vh;
+        max-height: 100vh;
+        overflow: scroll;
+        overflow-x: hidden;
+        padding: 15px;
+        box-sizing: border-box;
+    }
+
+    .carrier-pg .main-cardbox {
+        padding: 2.5rem;
+        background-color: #fff;
+        width: 800px;
+        max-width: 85%;
+        display: block;
+        margin: 25px auto;
+    }
+
+    .carrier-pg .hidden-dot-listing {
+        margin: 20px 0px;
+        padding: 0px;
+    }
+
+        .carrier-pg .hidden-dot-listing li {
+            list-style-type: none;
+            margin-bottom: 4px;
+        }
+
+            .carrier-pg .hidden-dot-listing li strong {
+                text-decoration: underline;
+            }
+
+    .carrier-pg input:not(.form-control) {
+        padding: 3px;
+    }
+    .carrier-pg input:not(.form-control):focus {
+        outline: none;
+        box-shadow: none;
+        padding: 3px;
+        box-sizing: border-box;
+    }
+
+.serif {
+    font-family: serif;
+}
+
+.carrier-pg .insurance-info-listing {
+    padding-left: 20px;
+}
+
+    .carrier-pg .insurance-info-listing li {
+        margin-bottom: 6px;
+    }
+
+        .carrier-pg .insurance-info-listing li ul li {
+            list-style-type: square;
+        }
+
+.carrier-pg .form-label {
+    font-weight: 600;
+    font-family: sans-serif;
+    color: #222;
+}
+.carrier-pg-body .message-error {
+    position: fixed;
+    width: 100%;
+    height: auto;
+    background-color: #e925259e;
+    padding:0px 0px 15px;
+    z-index:5;
+}
+.carrier-pg-body .message-error ul li {
+    list-style-type:none;
+    color: #fff;
+}
+.carrier-pg .form-group sup,
+.carrier-pg .form-group sup .required {
+    color: red;
+}
+.carrier-pg .form-group .field-validation-error {
+    font-size:13px;
+    color: red;
+    display:block;
+    margin-bottom:6px;
+}
+.carrier-pg .date-picker-wrapper {
+    display:inline-block;
+    margin-top:5px;
+    margin-left:8px;
+}   
+.carrier-pg .signature-box {
+    height: 150px;
+    width: 100%;
+    border: 1px solid #cdcdcd;
+    border-radius: 10px;
+}
+
+.carrier-pg .carrier-sumit-btn {
+    padding: 8px 12px;
+    background-color: #1b6ead;
+    color: #fff;
+    font-size: 15px;
+    border-radius: 5px;
+    border: none;
+}
+
+.carrier-pg .brokername {
+    width: 25%;
+    border: none;
+    border-bottom: 1px solid #222;
+}
+
+.carrier-pg .carriername {
+    width: 25%;
+    border: none;
+    border-bottom: 1px solid #222;
+}
+
+.carrier-pg .parties-brokername {
+    width: 25%;
+    border: none;
+    border-bottom: 1px solid #222;
+}
+
+.carrier-pg .parties-carriername {
+    width: 25%;
+    border: none;
+    border-bottom: 1px solid #222;
+}
+
+.carrier-pg .cargo-damage-lossamount {
+    width: 120px;
+    border: none;
+    border-bottom: 1px solid #222;
+}
+
+.carrier-pg .broker-notice-address {
+    width: 45%;
+    border: none;
+    border-bottom: 1px solid #222;
+}
+
+.carrier-pg .carrier-notice-address {
+    width: 45%;
+    border: none;
+    border-bottom: 1px solid #222;
+}
+
+.carrier-pg .laws-sate-missouri {
+    width: 100px;
+    border: none;
+    border-bottom: 1px solid #222;
+}
+
+.carrier-pg .mo-law {
+    width: 150px;
+    border: none;
+    border-bottom: 1px solid #222;
+}
+
+.carrier-pg .mc-number {
+    width: 100px;
+    border: none;
+    border-bottom: 1px solid #222;
+}
+
+.carrier-pg . {
+}
+
+
+
+/*-------- Carrier Setup end ---------*/

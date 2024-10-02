@@ -28,12 +28,17 @@ public partial class RouteProvider : BaseRouteProvider, IRouteProvider
         //home page
         endpointRouteBuilder.MapControllerRoute(name: "Homepage",
             pattern: $"{lang}",
-            defaults: new { controller = "Home", action = "Index" });
+            defaults: new { controller = "Customer", action = "Login" });
 
         //login
         endpointRouteBuilder.MapControllerRoute(name: "Login",
             pattern: $"{lang}/login/",
             defaults: new { controller = "Customer", action = "Login" });
+
+        //Admin
+        endpointRouteBuilder.MapControllerRoute(name: "Admin",
+            pattern: $"{lang}/Admin",
+            defaults: new { });
 
         // multi-factor verification digit code page
         endpointRouteBuilder.MapControllerRoute(name: "MultiFactorVerification",

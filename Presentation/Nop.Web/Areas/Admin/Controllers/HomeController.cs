@@ -70,7 +70,7 @@ public partial class HomeController : BaseAdminController
             if (warnings.Any(warning => warning.Level == SystemWarningLevel.Fail || warning.Level == SystemWarningLevel.Warning))
             {
                 var locale = await _localizationService.GetResourceAsync("Admin.System.Warnings.Errors");
-                _notificationService.WarningNotification(string.Format(locale, Url.Action("Warnings", "Common")), false); //do not encode URLs
+                //_notificationService.WarningNotification(string.Format(locale, Url.Action("Warnings", "Common")), false); //do not encode URLs
             }
         }
 
