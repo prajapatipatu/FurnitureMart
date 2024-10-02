@@ -17,8 +17,8 @@
     var returnUrl = webHelper.GetRawUrl(Context.Request);
 
     //page title
-    string adminPageTitle = !string.IsNullOrWhiteSpace(ViewBag.PageTitle) ? ViewBag.PageTitle + " / " : "";
-    adminPageTitle += T("Admin.PageTitle").Text;
+    string adminPageTitle = !string.IsNullOrWhiteSpace(ViewBag.PageTitle) ? ViewBag.PageTitle  : "";
+    // adminPageTitle += T("Admin.PageTitle").Text;
 
     //has "Manage Maintenance" permission?
     var canManageMaintenance = await permissionService.AuthorizeAsync(StandardPermissionProvider.ManageMaintenance);
@@ -78,9 +78,9 @@
                     </li>
                     @await Component.InvokeAsync(typeof(AdminWidgetViewComponent), new { widgetZone = AdminWidgetZones.HeaderToggleAfter })
                 </ul>
-                <a href="@Url.Content("~/Admin")" class="brand-link navbar-dark">
+                @* <a href="@Url.Content("~/Admin")" class="brand-link navbar-dark">
                     <img src="~/css/admin/images/logo.png" alt="logo.png" class="brand-image logo d-block d-md-none d-sm-block d-sm-none">
-                </a>
+                </a> *@
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
@@ -102,9 +102,9 @@
                         <li class="nav-item">
                             @await Component.InvokeAsync(typeof(AdminWidgetViewComponent), new { widgetZone = AdminWidgetZones.HeaderMiddle })
                         </li>
-                        <li class="nav-item">
+                        @* <li class="nav-item">
                             <a asp-controller="Home" asp-action="Index" asp-area="" class="nav-link">@T("Admin.Header.PublicStore")</a>
-                        </li>
+                        </li> *@
                         @if (canManageMaintenance)
                         {
                             <li class="nav-item dropdown">
@@ -122,7 +122,7 @@
                                             </div>
                                         </form>
                                     </li>
-                                    <li class="dropdown-item">
+                                    @* <li class="dropdown-item">
                                         <form asp-controller="Common" asp-action="RestartApplication" asp-area="@AreaNames.ADMIN">
                                             <input name="returnurl" type="hidden" value="@returnUrl">
                                             <button id="restart-application" type="submit" style="width:210px;background-color: Transparent;">
@@ -136,7 +136,7 @@
                                                 });
                                             </script>
                                         </form>
-                                    </li>
+                                    </li> *@
                                 </ul>
                             </li>
                         }
@@ -188,24 +188,24 @@
             <div class="container-fluid">
                 <div class="col-md-12">
                     <div class="row">
-                        @if (!storeInformationSettings.HidePoweredByNopCommerce)
+                        @* @if (!storeInformationSettings.HidePoweredByNopCommerce)
                         {
                             <div class="col-md-4 col-xs-12 text-md-left text-center">
                                 @*Would you like to remove the "Powered by nopCommerce" link in the bottom of the footer?
                                     Please find more info at https://www.nopcommerce.com/nopcommerce-copyright-removal-key*@
-                                Powered by <a href="@(OfficialSite.Main + Utm.OnAdminFooter)" target="_blank">nopCommerce</a>
-                            </div>
-                        }
-                        else
+                                @* Powered by <a href="@(OfficialSite.Main + Utm.OnAdminFooter)" target="_blank">nopCommerce</a> *@
+                            @* </div> *@
+                        } 
+                        @* else
                         {
                             <div class="col-md-4 col-xs-12"></div>
-                        }
-                        <div class="col-md-4 col-xs-12 text-center">
+                        } *@
+                        @* <div class="col-md-4 col-xs-12 text-center">
                             @((await dateTimeHelper.ConvertToUserTimeAsync(DateTime.Now)).ToString("f", CultureInfo.CurrentCulture))
                         </div>
                         <div class="col-md-4 col-xs-12 text-md-right text-center">
                             <b>nopCommerce version @NopVersion.FULL_VERSION</b>
-                        </div>
+                        </div> *@
                     </div>
                 </div>
             </div>

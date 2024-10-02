@@ -452,7 +452,7 @@ public partial class CustomerRegistrationService : ICustomerRegistrationService
         if (!string.IsNullOrEmpty(returnUrl) && urlHelper.IsLocalUrl(returnUrl))
             return new RedirectResult(returnUrl);
 
-        return new RedirectToRouteResult("Homepage", null);
+        return new RedirectToRouteResult("Admin", null);
     }
 
     /// <summary>
