@@ -69,9 +69,23 @@ function checkOverriddenStoreValue(obj, selector) {
 
     if (!$(obj).is(':checked')) {
         $(selector).attr('disabled', true);
+        //Kendo UI elements are enabled/disabled some other way
+        $.each(elementsArray, function (key, value) {
+            var kenoduiElement = $(value).data("kendoNumericTextBox") || $(value).data("kendoMultiSelect");
+            if (kenoduiElement !== undefined && kenoduiElement !== null) {
+                kenoduiElement.enable(false);
+            }
+        });
     }
     else {
         $(selector).removeAttr('disabled');
+        //Kendo UI elements are enabled/disabled some other way
+        $.each(elementsArray, function (key, value) {
+            var kenoduiElement = $(value).data("kendoNumericTextBox") || $(value).data("kendoMultiSelect");
+            if (kenoduiElement !== undefined && kenoduiElement !== null) {
+                kenoduiElement.enable();
+            }
+        });
     }
 }
 
@@ -365,3 +379,29 @@ function prepareTableCheckboxes(masterCheckbox, childCheckbox) {
   //Determining the state of the master checkbox by the state of its children
   $(masterCheckbox).prop('checked', $(childCheckbox).length == $(childCheckbox + ':checked').length && $(childCheckbox).length > 0);
 }
+
+function restrictToDigitsOnly(elementId, maxDigits) {
+    $(elementId).on('input', function () {
+        // Remove non-numeric characters
+        this.value = this.value.replace(/\D/g, '');
+
+        // Limit to specified number of digits
+        if (this.value.length > maxDigits) {
+            this.value = this.value.slice(0, maxDigits);
+        }
+    });
+}
+$(document).ready(function () {
+    try {
+        $('select:not([multiple])').kendoDropDownList({
+            filter: "contains",
+            filtering: function (e) {
+                var filter = e.filter;
+            }
+        });
+    }
+    catch
+    {
+
+    }
+});

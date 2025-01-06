@@ -71,7 +71,7 @@
         else
         {
             @await Component.InvokeAsync(typeof(AdminWidgetViewComponent), new { widgetZone = AdminWidgetZones.HeaderBefore })
-            <nav class="main-header navbar navbar-expand-md navbar-dark bg-dark">
+            <nav class="main-header navbar navbar-expand-md navbar-light bg-light">
                 <ul class="navbar-nav pl-2 pl-md-0">
                     <li class="nav-item">
                         <a class="nav-link" id="nopSideBarPusher" data-widget="pushmenu" href="#"><i class="fa fa-bars"></i></a>
@@ -153,9 +153,9 @@
         }
         else
         {
-            <aside class="main-sidebar sidebar-dark-primary elevation-4">
+            <aside class="main-sidebar sidebar-light-primary elevation-4">
                 <!-- Brand Logo -->
-            <a href="@Url.Content("~/Admin")" class="brand-link navbar-dark logo-switch">
+            <a href="@Url.Content("~/Admin")" class="brand-link navbar-light logo-switch">
                     <img src="~/css/admin/images/logo.png" alt="logo.png" class="brand-image-xl logo-xl">
                     <img src="~/css/admin/images/logo-mini.png" alt="logo.png" class="brand-image-xs logo-xs">
                 </a>
@@ -184,10 +184,10 @@
             <nop-antiforgery-token />
             @RenderBody()
         </div>
-        <div class="main-footer">
-            <div class="container-fluid">
-                <div class="col-md-12">
-                    <div class="row">
+        @* <div class="main-footer">
+            <div class="container-fluid"> *@
+               @*  <div class="col-md-12">
+                    <div class="row"> *@
                         @* @if (!storeInformationSettings.HidePoweredByNopCommerce)
                         {
                             <div class="col-md-4 col-xs-12 text-md-left text-center">
@@ -195,7 +195,7 @@
                                     Please find more info at https://www.nopcommerce.com/nopcommerce-copyright-removal-key*@
                                 @* Powered by <a href="@(OfficialSite.Main + Utm.OnAdminFooter)" target="_blank">nopCommerce</a> *@
                             @* </div> *@
-                        } 
+                        @* } *@ 
                         @* else
                         {
                             <div class="col-md-4 col-xs-12"></div>
@@ -206,10 +206,10 @@
                         <div class="col-md-4 col-xs-12 text-md-right text-center">
                             <b>nopCommerce version @NopVersion.FULL_VERSION</b>
                         </div> *@
-                    </div>
-                </div>
-            </div>
-        </div>
+                   @*  </div>
+                </div> *@
+            @* </div>
+        </div> *@
     </div>
 
     <script>

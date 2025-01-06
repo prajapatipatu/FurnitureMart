@@ -15,6 +15,13 @@ public partial class CustomerValidator : BaseNopValidator<CustomerModel>
         ILocalizationService localizationService,
         IStateProvinceService stateProvinceService)
     {
+
+        RuleFor(x => x.FirstName)
+                .NotEmpty()
+                .WithMessageAwait(localizationService.GetResourceAsync("Admin.Customers.Customers.Fields.FirstName.Required"))
+                //only for registered users
+                .WhenAwait(async x => await IsRegisteredCustomerRoleCheckedAsync(x, customerService));
+
         //ensure that valid email address is entered if Registered role is checked to avoid registered customers with empty email address
         RuleFor(x => x.Email)
             .NotEmpty()

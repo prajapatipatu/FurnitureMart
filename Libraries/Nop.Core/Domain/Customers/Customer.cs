@@ -237,6 +237,7 @@ public partial class Customer : BaseEntity, ISoftDeletedEntity
     /// Gets or sets the shipping address identifier
     /// </summary>
     public int? ShippingAddressId { get; set; }
+    public string GSTNumber { get; set; }
 
     #region Custom properties
 

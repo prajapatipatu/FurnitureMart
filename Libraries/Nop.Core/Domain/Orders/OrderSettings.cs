@@ -187,4 +187,13 @@ public partial class OrderSettings : ISettings
     /// Gets or sets a value indicating whether "Summary" block should be displayed on the order list table
     /// </summary>
     public bool DisplayOrderSummary { get; set; }
+    public string AFMGSTNumber { get; set; }
+    public string AFMMobileNumber { get; set; }
+    public string AFMAddress { get; set; }
+    public string AFMState { get; set; }
+    public string AFMStateCode { get; set; }
+    public string AFMFullName { get; set; }
+    public string PaymentStatus { get; set; }
+    public int GstRate { get; set; }
+    public bool CustomerRequired { get; set; }
 }

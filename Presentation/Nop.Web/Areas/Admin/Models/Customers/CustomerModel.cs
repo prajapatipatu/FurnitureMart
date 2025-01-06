@@ -51,6 +51,9 @@ public partial record CustomerModel : BaseNopEntityModel, IAclSupportedModel
     [NopResourceDisplayName("Admin.Customers.Customers.Fields.Email")]
     public string Email { get; set; }
 
+    [NopResourceDisplayName("Admin.Customers.Customers.Fields.GSTNumber")]
+    public string GSTNumber { get; set; }
+
     [NopResourceDisplayName("Admin.Customers.Customers.Fields.Password")]
     [DataType(DataType.Password)]
     public string Password { get; set; }

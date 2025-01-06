@@ -1,4 +1,5 @@
-﻿using System.IO.Compression;
+﻿using System.Globalization;
+using System.IO.Compression;
 using System.Net;
 using Nop.Core;
 using Nop.Core.Domain.Catalog;
@@ -16,6 +17,7 @@ using Nop.Services.Attributes;
 using Nop.Services.Catalog;
 using Nop.Services.Common.Pdf;
 using Nop.Services.Configuration;
+using Nop.Services.Customers;
 using Nop.Services.Directory;
 using Nop.Services.Helpers;
 using Nop.Services.Html;
@@ -26,6 +28,7 @@ using Nop.Services.Payments;
 using Nop.Services.Shipping;
 using Nop.Services.Stores;
 using Nop.Services.Vendors;
+using Org.BouncyCastle.Math;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 
@@ -69,6 +72,8 @@ public partial class PdfService : IPdfService
     protected readonly MeasureSettings _measureSettings;
     protected readonly TaxSettings _taxSettings;
     protected readonly VendorSettings _vendorSettings;
+    protected readonly OrderSettings _orderSettings;
+    protected readonly ICustomerService _customerService;
 
     #endregion
 
@@ -104,7 +109,9 @@ public partial class PdfService : IPdfService
         IWorkContext workContext,
         MeasureSettings measureSettings,
         TaxSettings taxSettings,
-        VendorSettings vendorSettings)
+        VendorSettings vendorSettings,
+        OrderSettings orderSettings,
+        ICustomerService customerService)
     {
         _addressSettings = addressSettings;
         _catalogSettings = catalogSettings;
@@ -137,6 +144,8 @@ public partial class PdfService : IPdfService
         _measureSettings = measureSettings;
         _taxSettings = taxSettings;
         _vendorSettings = vendorSettings;
+        _orderSettings = orderSettings;
+        _customerService = customerService;
     }
 
     #endregion
@@ -160,6 +169,7 @@ public partial class PdfService : IPdfService
             addressResult.Company = billingAddress.Company;
 
         addressResult.Name = $"{billingAddress.FirstName} {billingAddress.LastName}";
+        addressResult.PaymentMethod = _orderSettings.AFMGSTNumber;
 
         if (_addressSettings.PhoneEnabled)
             addressResult.Phone = billingAddress.PhoneNumber;
@@ -170,26 +180,26 @@ public partial class PdfService : IPdfService
         if (_addressSettings.StreetAddressEnabled)
             addressResult.Address = billingAddress.Address1;
 
-        if (_addressSettings.StreetAddress2Enabled && !string.IsNullOrEmpty(billingAddress.Address2))
-            addressResult.Address2 = billingAddress.Address2;
+        //if (_addressSettings.StreetAddress2Enabled && !string.IsNullOrEmpty(billingAddress.Address2))
+        //    addressResult.Address2 = billingAddress.Address2;
 
-        if (_addressSettings.CityEnabled && !string.IsNullOrEmpty(billingAddress.City))
-            addressResult.City = billingAddress.City;
+        //if (_addressSettings.CityEnabled && !string.IsNullOrEmpty(billingAddress.City))
+        //    addressResult.City = billingAddress.City;
 
-        if (_addressSettings.CountyEnabled && !string.IsNullOrEmpty(billingAddress.County))
-            addressResult.County = billingAddress.County;
+        //if (_addressSettings.CountyEnabled && !string.IsNullOrEmpty(billingAddress.County))
+        //    addressResult.County = billingAddress.County;
 
-        if (_addressSettings.ZipPostalCodeEnabled && !string.IsNullOrEmpty(billingAddress.ZipPostalCode))
-            addressResult.ZipPostalCode = billingAddress.ZipPostalCode;
+        //if (_addressSettings.ZipPostalCodeEnabled && !string.IsNullOrEmpty(billingAddress.ZipPostalCode))
+        //    addressResult.ZipPostalCode = billingAddress.ZipPostalCode;
 
-        var stateProvince = await _stateProvinceService.GetStateProvinceByAddressAsync(billingAddress);
-        addressResult.StateProvinceName = stateProvince != null ? await _localizationService.GetLocalizedAsync(stateProvince, x => x.Name, lang.Id) : string.Empty;
+        //var stateProvince = await _stateProvinceService.GetStateProvinceByAddressAsync(billingAddress);
+        //addressResult.StateProvinceName = stateProvince != null ? await _localizationService.GetLocalizedAsync(stateProvince, x => x.Name, lang.Id) : string.Empty;
 
-        if (_addressSettings.CountryEnabled && await _countryService.GetCountryByAddressAsync(billingAddress) is Country country)
-            addressResult.Country = await _localizationService.GetLocalizedAsync(country, x => x.Name, lang.Id);
+        //if (_addressSettings.CountryEnabled && await _countryService.GetCountryByAddressAsync(billingAddress) is Country country)
+        //    addressResult.Country = await _localizationService.GetLocalizedAsync(country, x => x.Name, lang.Id);
 
-        var (addressLine, _) = await _addressService.FormatAddressAsync(billingAddress, lang.Id);
-        addressResult.AddressLine = addressLine;
+        //var (addressLine, _) = await _addressService.FormatAddressAsync(billingAddress, lang.Id);
+        addressResult.AddressLine = billingAddress.Address1;
 
         //VAT number
         if (!string.IsNullOrEmpty(order.VatNumber))
@@ -215,7 +225,7 @@ public partial class PdfService : IPdfService
                 : order.PaymentMethodSystemName;
             if (!string.IsNullOrEmpty(paymentMethodStr))
             {
-                addressResult.PaymentMethod = paymentMethodStr;
+                //addressResult.PaymentMethod = paymentMethodStr;
             }
 
             //custom values
@@ -247,39 +257,47 @@ public partial class PdfService : IPdfService
                 if (!string.IsNullOrEmpty(shippingAddress.Company))
                     addressResult.Company = shippingAddress.Company;
 
-                addressResult.Name = $"{shippingAddress.FirstName} {shippingAddress.LastName}";
+                var customer = await _customerService.GetCustomerByIdAsync(order.CustomerId);
 
+                addressResult.Name = $"{shippingAddress.FirstName} {shippingAddress.LastName}";
+                addressResult.ShippingMethod  = customer != null ? customer.GSTNumber : string.Empty;
+                
                 if (_addressSettings.PhoneEnabled)
                     addressResult.Phone = shippingAddress.PhoneNumber;
 
                 if (_addressSettings.FaxEnabled && !string.IsNullOrEmpty(shippingAddress.FaxNumber))
                     addressResult.Fax = shippingAddress.FaxNumber;
 
-                if (_addressSettings.StreetAddressEnabled)
-                    addressResult.Address = shippingAddress.Address1;
+                var shipAddress = new List<string>();
+                
+                if (_addressSettings.StreetAddressEnabled && !string.IsNullOrEmpty(shippingAddress.Address1))
+                    shipAddress.Add(shippingAddress.Address1);
 
                 if (_addressSettings.StreetAddress2Enabled && !string.IsNullOrEmpty(shippingAddress.Address2))
-                    addressResult.Address2 = shippingAddress.Address2;
+                    shipAddress.Add(shippingAddress.Address2);
 
                 if (_addressSettings.CityEnabled && !string.IsNullOrEmpty(shippingAddress.City))
-                    addressResult.City = shippingAddress.City;
-
-                if (_addressSettings.CountyEnabled && !string.IsNullOrEmpty(shippingAddress.County))
-                    addressResult.County = shippingAddress.County;
-
-                if (_addressSettings.ZipPostalCodeEnabled && !string.IsNullOrEmpty(shippingAddress.ZipPostalCode))
-                    addressResult.ZipPostalCode = shippingAddress.ZipPostalCode;
+                    shipAddress.Add(shippingAddress.City);
 
                 var stateProvince = await _stateProvinceService.GetStateProvinceByAddressAsync(shippingAddress);
-                addressResult.StateProvinceName = stateProvince != null ? await _localizationService.GetLocalizedAsync(stateProvince, x => x.Name, lang.Id) : string.Empty;
+                shipAddress.Add(stateProvince != null ? await _localizationService.GetLocalizedAsync(stateProvince, x => x.Name, lang.Id) : string.Empty);
 
-                if (_addressSettings.CountryEnabled && await _countryService.GetCountryByAddressAsync(shippingAddress) is Country country)
-                {
-                    addressResult.Country = await _localizationService.GetLocalizedAsync(country, x => x.Name, lang.Id);
-                }
+                if (_addressSettings.ZipPostalCodeEnabled && !string.IsNullOrEmpty(shippingAddress.ZipPostalCode))
+                    shipAddress.Add(shippingAddress.ZipPostalCode);
+
+                if (_addressSettings.CountyEnabled && !string.IsNullOrEmpty(shippingAddress.County))
+                    shipAddress.Add(shippingAddress.County);
+
+                
+
+                
+                //if (_addressSettings.CountryEnabled && await _countryService.GetCountryByAddressAsync(shippingAddress) is Country country)
+                //{
+                //    addressResult.Country = await _localizationService.GetLocalizedAsync(country, x => x.Name, lang.Id);
+                //}
 
                 var (addressLine, _) = await _addressService.FormatAddressAsync(shippingAddress, lang.Id);
-                addressResult.AddressLine = addressLine;
+                addressResult.AddressLine = string.Join(", ", shipAddress);
 
                 //custom attributes
                 var customShippingAddressAttributes = await _addressAttributeFormatter
@@ -317,7 +335,7 @@ public partial class PdfService : IPdfService
                     addressResult.Country = await _localizationService.GetLocalizedAsync(country, x => x.Name, lang.Id);
             }
 
-            addressResult.ShippingMethod = order.ShippingMethod;
+            //addressResult.ShippingMethod = order.ShippingMethod;
         }
 
         return addressResult;
@@ -371,7 +389,7 @@ public partial class PdfService : IPdfService
         var vendors = _vendorSettings.ShowVendorOnOrderDetailsPage ? await _vendorService.GetVendorsByProductIdsAsync(orderItems.Select(item => item.ProductId).ToArray()) : new List<Vendor>();
 
         var result = new List<ProductItem>();
-
+        var subTotalPrice = decimal.Zero;
         foreach (var oi in orderItems)
         {
             var productItem = new ProductItem();
@@ -414,7 +432,9 @@ public partial class PdfService : IPdfService
                     order.CustomerCurrencyCode, language.Id, false);
             }
 
-            productItem.Price = unitPrice;
+            
+            //productItem.Price = await _priceFormatter.FormatPriceAsync(product.Price, true, order.CustomerCurrencyCode, language.Id, true);
+            productItem.Price = string.Format(new CultureInfo("en-IN"), "{0:N2}", product.Price);
 
             //qty
             productItem.Quantity = shipmentItems is null ?
@@ -440,11 +460,14 @@ public partial class PdfService : IPdfService
                     language.Id, false);
             }
 
-            productItem.Total = subTotal;
+            var totalOrderPrice = product.Price * oi.Quantity;
+            //productItem.Total = await _priceFormatter.FormatPriceAsync(totalOrderPrice, true, order.CustomerCurrencyCode, language.Id, false);
+            productItem.Total = string.Format(new CultureInfo("en-IN"), "{0:N2}", totalOrderPrice);
 
+            subTotalPrice = subTotalPrice + totalOrderPrice;
             result.Add(productItem);
         }
-
+        order.OrderSubtotalExclTax = subTotalPrice;
         return result;
     }
 
@@ -460,174 +483,182 @@ public partial class PdfService : IPdfService
         var languageId = lang.Id;
 
         //order subtotal
-        if (order.CustomerTaxDisplayType == TaxDisplayType.IncludingTax &&
-            !_taxSettings.ForceTaxExclusionFromOrderSubtotal)
-        {
-            //including tax
-            var orderSubtotalInclTaxInCustomerCurrency =
-                _currencyService.ConvertCurrency(order.OrderSubtotalInclTax, order.CurrencyRate);
-            result.SubTotal = await _priceFormatter.FormatPriceAsync(orderSubtotalInclTaxInCustomerCurrency, true,
-                order.CustomerCurrencyCode, languageId, true);
-        }
-        else
-        {
-            //excluding tax
-            var orderSubtotalExclTaxInCustomerCurrency =
-                _currencyService.ConvertCurrency(order.OrderSubtotalExclTax, order.CurrencyRate);
-            result.SubTotal = await _priceFormatter.FormatPriceAsync(orderSubtotalExclTaxInCustomerCurrency, true,
-                order.CustomerCurrencyCode, languageId, false);
-        }
-
+        //if (order.CustomerTaxDisplayType == TaxDisplayType.IncludingTax &&
+        //    !_taxSettings.ForceTaxExclusionFromOrderSubtotal)
+        //{
+        //    //including tax
+        //    var orderSubtotalInclTaxInCustomerCurrency =
+        //        _currencyService.ConvertCurrency(order.OrderSubtotalInclTax, order.CurrencyRate);
+        //    result.SubTotal = await _priceFormatter.FormatPriceAsync(orderSubtotalInclTaxInCustomerCurrency, true,
+        //        order.CustomerCurrencyCode, languageId, true);
+        //}
+        //else
+        //{
+        //    //excluding tax
+        //    var orderSubtotalExclTaxInCustomerCurrency =
+        //        _currencyService.ConvertCurrency(order.OrderSubtotalExclTax, order.CurrencyRate);
+        //    result.SubTotal = await _priceFormatter.FormatPriceAsync(orderSubtotalExclTaxInCustomerCurrency, true,
+        //        order.CustomerCurrencyCode, languageId, false);
+        //}
+        result.SubTotal = string.Format(new CultureInfo("en-IN"), "{0:N2}", order.OrderSubtotalExclTax);
+        var gstAmount = order.OrderSubtotalExclTax * _orderSettings.GstRate / (100 + _orderSettings.GstRate);
+        // Split GST equally into CGST and SGST
+        var cgst = gstAmount / 2;
+        var sgst = gstAmount / 2;
+        result.Shipping = string.Format(new CultureInfo("en-IN"), "{0:N2}", cgst);
+        result.Tax = string.Format(new CultureInfo("en-IN"), "{0:N2}", sgst);
+        var orderTotalStr = string.Format(new CultureInfo("en-IN"), "{0:N2}", order.OrderSubtotalExclTax + cgst + sgst);
+        result.OrderTotal = $"{await _localizationService.GetResourceAsync("Pdf.OrderTotal", languageId)} {orderTotalStr}"; 
         //discount (applied to order subtotal)
-        if (order.OrderSubTotalDiscountExclTax > decimal.Zero)
-        {
-            //order subtotal
-            if (order.CustomerTaxDisplayType == TaxDisplayType.IncludingTax &&
-                !_taxSettings.ForceTaxExclusionFromOrderSubtotal)
-            {
-                //including tax
-                var orderSubTotalDiscountInclTaxInCustomerCurrency =
-                    _currencyService.ConvertCurrency(order.OrderSubTotalDiscountInclTax, order.CurrencyRate);
-                result.Discount = await _priceFormatter.FormatPriceAsync(
-                    -orderSubTotalDiscountInclTaxInCustomerCurrency, true, order.CustomerCurrencyCode, languageId, true);
-            }
-            else
-            {
-                //excluding tax
-                var orderSubTotalDiscountExclTaxInCustomerCurrency =
-                    _currencyService.ConvertCurrency(order.OrderSubTotalDiscountExclTax, order.CurrencyRate);
-                result.Discount = await _priceFormatter.FormatPriceAsync(
-                    -orderSubTotalDiscountExclTaxInCustomerCurrency, true, order.CustomerCurrencyCode, languageId, false);
-            }
-        }
+        //if (order.OrderSubTotalDiscountExclTax > decimal.Zero)
+        //{
+        //    //order subtotal
+        //    if (order.CustomerTaxDisplayType == TaxDisplayType.IncludingTax &&
+        //        !_taxSettings.ForceTaxExclusionFromOrderSubtotal)
+        //    {
+        //        //including tax
+        //        var orderSubTotalDiscountInclTaxInCustomerCurrency =
+        //            _currencyService.ConvertCurrency(order.OrderSubTotalDiscountInclTax, order.CurrencyRate);
+        //        result.Discount = await _priceFormatter.FormatPriceAsync(
+        //            -orderSubTotalDiscountInclTaxInCustomerCurrency, true, order.CustomerCurrencyCode, languageId, true);
+        //    }
+        //    else
+        //    {
+        //        //excluding tax
+        //        var orderSubTotalDiscountExclTaxInCustomerCurrency =
+        //            _currencyService.ConvertCurrency(order.OrderSubTotalDiscountExclTax, order.CurrencyRate);
+        //        result.Discount = await _priceFormatter.FormatPriceAsync(
+        //            -orderSubTotalDiscountExclTaxInCustomerCurrency, true, order.CustomerCurrencyCode, languageId, false);
+        //    }
+        //}
 
-        //shipping
-        if (order.ShippingStatus != ShippingStatus.ShippingNotRequired)
-        {
-            if (order.CustomerTaxDisplayType == TaxDisplayType.IncludingTax)
-            {
-                //including tax
-                var orderShippingInclTaxInCustomerCurrency =
-                    _currencyService.ConvertCurrency(order.OrderShippingInclTax, order.CurrencyRate);
-                result.Shipping = await _priceFormatter.FormatShippingPriceAsync(
-                    orderShippingInclTaxInCustomerCurrency, true, order.CustomerCurrencyCode, languageId, true);
-            }
-            else
-            {
-                //excluding tax
-                var orderShippingExclTaxInCustomerCurrency =
-                    _currencyService.ConvertCurrency(order.OrderShippingExclTax, order.CurrencyRate);
-                result.Shipping = await _priceFormatter.FormatShippingPriceAsync(
-                    orderShippingExclTaxInCustomerCurrency, true, order.CustomerCurrencyCode, languageId, false);
-            }
-        }
+        ////shipping
+        //if (order.ShippingStatus != ShippingStatus.ShippingNotRequired)
+        //{
+        //    if (order.CustomerTaxDisplayType == TaxDisplayType.IncludingTax)
+        //    {
+        //        //including tax
+        //        var orderShippingInclTaxInCustomerCurrency =
+        //            _currencyService.ConvertCurrency(order.OrderShippingInclTax, order.CurrencyRate);
+        //        result.Shipping = await _priceFormatter.FormatShippingPriceAsync(
+        //            orderShippingInclTaxInCustomerCurrency, true, order.CustomerCurrencyCode, languageId, true);
+        //    }
+        //    else
+        //    {
+        //        //excluding tax
+        //        var orderShippingExclTaxInCustomerCurrency =
+        //            _currencyService.ConvertCurrency(order.OrderShippingExclTax, order.CurrencyRate);
+        //        result.Shipping = await _priceFormatter.FormatShippingPriceAsync(
+        //            orderShippingExclTaxInCustomerCurrency, true, order.CustomerCurrencyCode, languageId, false);
+        //    }
+        //}
 
         //payment fee
-        if (order.PaymentMethodAdditionalFeeExclTax > decimal.Zero)
-        {
-            if (order.CustomerTaxDisplayType == TaxDisplayType.IncludingTax)
-            {
-                //including tax
-                var paymentMethodAdditionalFeeInclTaxInCustomerCurrency =
-                    _currencyService.ConvertCurrency(order.PaymentMethodAdditionalFeeInclTax, order.CurrencyRate);
-                result.PaymentMethodAdditionalFee = await _priceFormatter.FormatPaymentMethodAdditionalFeeAsync(
-                    paymentMethodAdditionalFeeInclTaxInCustomerCurrency, true, order.CustomerCurrencyCode, languageId, true);
-            }
-            else
-            {
-                //excluding tax
-                var paymentMethodAdditionalFeeExclTaxInCustomerCurrency =
-                    _currencyService.ConvertCurrency(order.PaymentMethodAdditionalFeeExclTax, order.CurrencyRate);
-                result.PaymentMethodAdditionalFee = await _priceFormatter.FormatPaymentMethodAdditionalFeeAsync(
-                    paymentMethodAdditionalFeeExclTaxInCustomerCurrency, true, order.CustomerCurrencyCode, languageId, false);
-            }
-        }
+        //if (order.PaymentMethodAdditionalFeeExclTax > decimal.Zero)
+        //{
+        //    if (order.CustomerTaxDisplayType == TaxDisplayType.IncludingTax)
+        //    {
+        //        //including tax
+        //        var paymentMethodAdditionalFeeInclTaxInCustomerCurrency =
+        //            _currencyService.ConvertCurrency(order.PaymentMethodAdditionalFeeInclTax, order.CurrencyRate);
+        //        result.PaymentMethodAdditionalFee = await _priceFormatter.FormatPaymentMethodAdditionalFeeAsync(
+        //            paymentMethodAdditionalFeeInclTaxInCustomerCurrency, true, order.CustomerCurrencyCode, languageId, true);
+        //    }
+        //    else
+        //    {
+        //        //excluding tax
+        //        var paymentMethodAdditionalFeeExclTaxInCustomerCurrency =
+        //            _currencyService.ConvertCurrency(order.PaymentMethodAdditionalFeeExclTax, order.CurrencyRate);
+        //        result.PaymentMethodAdditionalFee = await _priceFormatter.FormatPaymentMethodAdditionalFeeAsync(
+        //            paymentMethodAdditionalFeeExclTaxInCustomerCurrency, true, order.CustomerCurrencyCode, languageId, false);
+        //    }
+        //}
 
         //tax
-        var taxStr = string.Empty;
-        var taxRates = new SortedDictionary<decimal, decimal>();
-        bool displayTax;
-        var displayTaxRates = true;
-        if (_taxSettings.HideTaxInOrderSummary && order.CustomerTaxDisplayType == TaxDisplayType.IncludingTax)
-        {
-            displayTax = false;
-        }
-        else
-        {
-            if (order.OrderTax == 0 && _taxSettings.HideZeroTax)
-            {
-                displayTax = false;
-                displayTaxRates = false;
-            }
-            else
-            {
-                taxRates = _orderService.ParseTaxRates(order, order.TaxRates);
+        //var taxStr = string.Empty;
+        //var taxRates = new SortedDictionary<decimal, decimal>();
+        //bool displayTax;
+        //var displayTaxRates = true;
+        //if (_taxSettings.HideTaxInOrderSummary && order.CustomerTaxDisplayType == TaxDisplayType.IncludingTax)
+        //{
+        //    displayTax = false;
+        //}
+        //else
+        //{
+        //    if (order.OrderTax == 0 && _taxSettings.HideZeroTax)
+        //    {
+        //        displayTax = false;
+        //        displayTaxRates = false;
+        //    }
+        //    else
+        //    {
+        //        taxRates = _orderService.ParseTaxRates(order, order.TaxRates);
 
-                displayTaxRates = _taxSettings.DisplayTaxRates && taxRates.Any();
-                displayTax = !displayTaxRates;
+        //        displayTaxRates = _taxSettings.DisplayTaxRates && taxRates.Any();
+        //        displayTax = !displayTaxRates;
 
-                var orderTaxInCustomerCurrency = _currencyService.ConvertCurrency(order.OrderTax, order.CurrencyRate);
-                taxStr = await _priceFormatter.FormatPriceAsync(orderTaxInCustomerCurrency, true, order.CustomerCurrencyCode,
-                    false, languageId);
-            }
-        }
+        //        var orderTaxInCustomerCurrency = _currencyService.ConvertCurrency(order.OrderTax, order.CurrencyRate);
+        //        taxStr = await _priceFormatter.FormatPriceAsync(orderTaxInCustomerCurrency, true, order.CustomerCurrencyCode,
+        //            false, languageId);
+        //    }
+        //}
 
-        if (displayTax)
-        {
-            result.Tax = taxStr;
-        }
+        //if (displayTax)
+        //{
+        //    result.Tax = taxStr;
+        //}
 
-        if (displayTaxRates)
-        {
-            foreach (var item in taxRates)
-            {
-                var taxRate = string.Format(await _localizationService.GetResourceAsync("Pdf.TaxRate", languageId),
-                    _priceFormatter.FormatTaxRate(item.Key));
-                var taxValue = await _priceFormatter.FormatPriceAsync(
-                    _currencyService.ConvertCurrency(item.Value, order.CurrencyRate), true, order.CustomerCurrencyCode,
-                    false, languageId);
+        //if (displayTaxRates)
+        //{
+        //    foreach (var item in taxRates)
+        //    {
+        //        var taxRate = string.Format(await _localizationService.GetResourceAsync("Pdf.TaxRate", languageId),
+        //            _priceFormatter.FormatTaxRate(item.Key));
+        //        var taxValue = await _priceFormatter.FormatPriceAsync(
+        //            _currencyService.ConvertCurrency(item.Value, order.CurrencyRate), true, order.CustomerCurrencyCode,
+        //            false, languageId);
 
-                result.TaxRates.Add($"{taxRate} {taxValue}");
-            }
-        }
+        //        result.TaxRates.Add($"{taxRate} {taxValue}");
+        //    }
+        //}
 
-        //discount (applied to order total)
-        if (order.OrderDiscount > decimal.Zero)
-        {
-            var orderDiscountInCustomerCurrency =
-                _currencyService.ConvertCurrency(order.OrderDiscount, order.CurrencyRate);
-            result.Discount = await _priceFormatter.FormatPriceAsync(-orderDiscountInCustomerCurrency,
-                true, order.CustomerCurrencyCode, false, languageId);
-        }
+        ////discount (applied to order total)
+        //if (order.OrderDiscount > decimal.Zero)
+        //{
+        //    var orderDiscountInCustomerCurrency =
+        //        _currencyService.ConvertCurrency(order.OrderDiscount, order.CurrencyRate);
+        //    result.Discount = await _priceFormatter.FormatPriceAsync(-orderDiscountInCustomerCurrency,
+        //        true, order.CustomerCurrencyCode, false, languageId);
+        //}
 
-        //gift cards
-        foreach (var gcuh in await _giftCardService.GetGiftCardUsageHistoryAsync(order))
-        {
-            var gcTitle = string.Format(await _localizationService.GetResourceAsync("Pdf.GiftCardInfo", languageId),
-                (await _giftCardService.GetGiftCardByIdAsync(gcuh.GiftCardId))?.GiftCardCouponCode);
-            var gcAmountStr = await _priceFormatter.FormatPriceAsync(
-                -_currencyService.ConvertCurrency(gcuh.UsedValue, order.CurrencyRate), true,
-                order.CustomerCurrencyCode, false, languageId);
+        ////gift cards
+        //foreach (var gcuh in await _giftCardService.GetGiftCardUsageHistoryAsync(order))
+        //{
+        //    var gcTitle = string.Format(await _localizationService.GetResourceAsync("Pdf.GiftCardInfo", languageId),
+        //        (await _giftCardService.GetGiftCardByIdAsync(gcuh.GiftCardId))?.GiftCardCouponCode);
+        //    var gcAmountStr = await _priceFormatter.FormatPriceAsync(
+        //        -_currencyService.ConvertCurrency(gcuh.UsedValue, order.CurrencyRate), true,
+        //        order.CustomerCurrencyCode, false, languageId);
 
-            result.GiftCards.Add($"{gcTitle} {gcAmountStr}");
-        }
+        //    result.GiftCards.Add($"{gcTitle} {gcAmountStr}");
+        //}
 
-        //reward points
-        if (order.RedeemedRewardPointsEntryId.HasValue && await _rewardPointService.GetRewardPointsHistoryEntryByIdAsync(order.RedeemedRewardPointsEntryId.Value) is RewardPointsHistory redeemedRewardPointsEntry)
-        {
-            var rpTitle = string.Format(await _localizationService.GetResourceAsync("Pdf.RewardPoints", languageId),
-                -redeemedRewardPointsEntry.Points);
-            var rpAmount = await _priceFormatter.FormatPriceAsync(
-                -_currencyService.ConvertCurrency(redeemedRewardPointsEntry.UsedAmount, order.CurrencyRate),
-                true, order.CustomerCurrencyCode, false, languageId);
+        ////reward points
+        //if (order.RedeemedRewardPointsEntryId.HasValue && await _rewardPointService.GetRewardPointsHistoryEntryByIdAsync(order.RedeemedRewardPointsEntryId.Value) is RewardPointsHistory redeemedRewardPointsEntry)
+        //{
+        //    var rpTitle = string.Format(await _localizationService.GetResourceAsync("Pdf.RewardPoints", languageId),
+        //        -redeemedRewardPointsEntry.Points);
+        //    var rpAmount = await _priceFormatter.FormatPriceAsync(
+        //        -_currencyService.ConvertCurrency(redeemedRewardPointsEntry.UsedAmount, order.CurrencyRate),
+        //        true, order.CustomerCurrencyCode, false, languageId);
 
-            result.RewardPoints = $"{rpTitle} {rpAmount}";
-        }
+        //    result.RewardPoints = $"{rpTitle} {rpAmount}";
+        //}
 
-        //order total
-        var orderTotalInCustomerCurrency = _currencyService.ConvertCurrency(order.OrderTotal, order.CurrencyRate);
-        var orderTotalStr = await _priceFormatter.FormatPriceAsync(orderTotalInCustomerCurrency, true, order.CustomerCurrencyCode, false, languageId);
-        result.OrderTotal = $"{await _localizationService.GetResourceAsync("Pdf.OrderTotal", languageId)} {orderTotalStr}";
+        ////order total
+        //var orderTotalInCustomerCurrency = _currencyService.ConvertCurrency(order.OrderTotal, order.CurrencyRate);
+        //var orderTotalStr = await _priceFormatter.FormatPriceAsync(orderTotalInCustomerCurrency, true, order.CustomerCurrencyCode, false, languageId);
+        //result.OrderTotal = $"{await _localizationService.GetResourceAsync("Pdf.OrderTotal", languageId)} {orderTotalStr}";
 
         return result;
     }
@@ -700,7 +731,7 @@ public partial class PdfService : IPdfService
 
         var source = new InvoiceSource()
         {
-            StoreUrl = orderStore.Url?.Trim('/'),
+            //StoreUrl = orderStore.Url?.Trim('/'),
             Language = language,
             FontFamily = pdfSettingsByStore.FontFamily,
             OrderDateUser = date,
@@ -716,7 +747,7 @@ public partial class PdfService : IPdfService
             Totals = vendor is null ? await GetTotalsAsync(language, order) : new(), //vendors cannot see totals
             OrderNotes = await GetOrderNotesAsync(pdfSettingsByStore, order, language),
             FooterTextColumn1 = column1Lines,
-            FooterTextColumn2 = column2Lines
+            FooterTextColumn2 = column2Lines,
         };
 
         await using var pdfStream = new MemoryStream();

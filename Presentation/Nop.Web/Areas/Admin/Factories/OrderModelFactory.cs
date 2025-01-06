@@ -903,7 +903,7 @@ public partial class OrderModelFactory : IOrderModelFactory
     {
         ArgumentNullException.ThrowIfNull(searchModel);
 
-        searchModel.IsLoggedInAsVendor = await _workContext.GetCurrentVendorAsync() != null;
+        searchModel.IsLoggedInAsVendor = true;
         searchModel.BillingPhoneEnabled = _addressSettings.PhoneEnabled;
 
         var licenseCheckModel = new LicenseCheckModel();
@@ -1048,6 +1048,7 @@ public partial class OrderModelFactory : IOrderModelFactory
             return orders.SelectAwait(async order =>
             {
                 var billingAddress = await _addressService.GetAddressByIdAsync(order.BillingAddressId);
+                var customer = await _customerService.GetCustomerByIdAsync(order.CustomerId);
 
                 //fill in model values from the entity
                 var orderModel = new OrderModel
@@ -1056,8 +1057,8 @@ public partial class OrderModelFactory : IOrderModelFactory
                     OrderStatusId = order.OrderStatusId,
                     PaymentStatusId = order.PaymentStatusId,
                     ShippingStatusId = order.ShippingStatusId,
-                    CustomerEmail = billingAddress.Email,
-                    CustomerFullName = $"{billingAddress.FirstName} {billingAddress.LastName}",
+                    CustomerEmail = customer != null ? customer.Email : string.Empty,
+                    CustomerFullName = customer != null ?  customer.FirstName +" "+ customer.LastName : string.Empty,
                     CustomerId = order.CustomerId,
                     CustomOrderNumber = order.CustomOrderNumber
                 };
@@ -1071,7 +1072,7 @@ public partial class OrderModelFactory : IOrderModelFactory
                 orderModel.PaymentStatus = await _localizationService.GetLocalizedEnumAsync(order.PaymentStatus);
                 orderModel.ShippingStatus = await _localizationService.GetLocalizedEnumAsync(order.ShippingStatus);
                 orderModel.OrderTotal = await _priceFormatter.FormatPriceAsync(order.OrderTotal, true, false);
-
+                orderModel.IsLoggedInAsVendor = true;
                 return orderModel;
             });
         });
@@ -1223,6 +1224,17 @@ public partial class OrderModelFactory : IOrderModelFactory
         model.IsLoggedInAsVendor = await _workContext.GetCurrentVendorAsync() != null;
         model.AllowCustomersToSelectTaxDisplayType = _taxSettings.AllowCustomersToSelectTaxDisplayType;
         model.TaxDisplayType = _taxSettings.TaxDisplayType;
+
+        var customerRoles = await _customerService.GetAllCustomerRolesAsync(showHidden: true);
+        var customerRoleIds = customerRoles.Where(cr => cr.SystemName != NopCustomerDefaults.GuestsRoleName).Select(cr => cr.Id).ToList();
+
+        var customers = await _customerService.GetAllCustomersAsync(customerRoleIds: customerRoleIds.ToArray());
+        model.AvailableCustomers = customers.Where(x => x.Active && !string.IsNullOrEmpty(x.Email)).Select(customer => new SelectListItem { Text = customer.FirstName +" "+ customer.LastName , Value = customer.Id.ToString() }).ToList();
+        model.AvailableCustomers.Insert(0, new SelectListItem { Text = await _localizationService.GetResourceAsync("Admin.Common.Select"), Value = "0", Selected = true });
+        
+        await _baseAdminModelFactory.PrepareOrderPaymentStatusAsync(model.AvailablePaymentStatus, true, await _localizationService.GetResourceAsync("Admin.Common.Select"));
+        
+        model.CustomerRequired = _orderSettings.CustomerRequired;
 
         return model;
     }

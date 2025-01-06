@@ -11,6 +11,7 @@ using Nop.Services.Attributes;
 using Nop.Services.Catalog;
 using Nop.Services.Common;
 using Nop.Services.Customers;
+using Nop.Services.Directory;
 using Nop.Services.ExportImport;
 using Nop.Services.Helpers;
 using Nop.Services.Localization;
@@ -65,7 +66,8 @@ public partial class OrderController : BaseAdminController
     protected readonly IWorkflowMessageService _workflowMessageService;
     protected readonly OrderSettings _orderSettings;
     private static readonly char[] _separator = [','];
-
+    protected readonly ICustomNumberFormatter _customNumberFormatter;
+    private readonly ICurrencyService _currencyService;
     #endregion
 
     #region Ctor
@@ -99,7 +101,9 @@ public partial class OrderController : BaseAdminController
         IStoreContext storeContext,
         IWorkContext workContext,
         IWorkflowMessageService workflowMessageService,
-        OrderSettings orderSettings)
+        OrderSettings orderSettings,
+        ICustomNumberFormatter customNumberFormatter,
+        ICurrencyService currencyService)
     {
         _addressService = addressService;
         _addressAttributeParser = addressAttributeParser;
@@ -131,6 +135,8 @@ public partial class OrderController : BaseAdminController
         _workContext = workContext;
         _workflowMessageService = workflowMessageService;
         _orderSettings = orderSettings;
+        _customNumberFormatter = customNumberFormatter;
+        _currencyService = currencyService;
     }
 
     #endregion
@@ -890,6 +896,48 @@ public partial class OrderController : BaseAdminController
         return View(model);
     }
 
+    [HttpPost, ParameterBasedOnFormName("save-continue", "continueEditing")]
+    public virtual async Task<IActionResult> Edit(OrderModel model, bool continueEditing)
+    {
+        if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageOrders))
+            return AccessDeniedView();
+
+        //try to get an order with the specified id
+        var order = await _orderService.GetOrderByIdAsync(model.Id);
+        if (order == null || order.Deleted)
+            return RedirectToAction("List");
+
+        //a vendor does not have access to this functionality
+        if (await _workContext.GetCurrentVendorAsync() != null && !await HasAccessToOrderAsync(order))
+            return RedirectToAction("List");
+
+        if (ModelState.IsValid)
+        {
+            order.CreatedOnUtc = DateTime.UtcNow;
+            order.CustomerId = model.CustomerId;
+            order.OrderStatusId = model.OrderStatusId;
+            order.PaymentStatusId = model.PaymentStatusId;
+            order.CustomOrderNumber = _customNumberFormatter.GenerateOrderCustomNumber(order);
+            var customer = await _customerService.GetCustomerByIdAsync(model.CustomerId);
+            order.BillingAddressId = customer != null ? (int)customer.BillingAddressId : 0;
+            order.ShippingAddressId = customer != null ? customer.ShippingAddressId : 0;
+            order.CustomOrderNumber = order.Id.ToString();
+            await _orderService.UpdateOrderAsync(order);
+
+            _notificationService.SuccessNotification(await _localizationService.GetResourceAsync("Admin.Order.Updated"));
+
+            if (!continueEditing)
+                return RedirectToAction("List");
+
+            return RedirectToAction("Edit", new { id = order.Id });
+        }
+
+        //prepare model
+        model = await _orderModelFactory.PrepareOrderModelAsync(null, order);
+
+        return View(model);
+    }
+
     [HttpPost]
     public virtual async Task<IActionResult> Delete(int id)
     {
@@ -934,7 +982,7 @@ public partial class OrderController : BaseAdminController
         await _pdfService.PrintOrderToPdfAsync(stream, order, _orderSettings.GeneratePdfInvoiceInCustomerLanguage ? null : await _workContext.GetWorkingLanguageAsync(), store: null, vendor: currentVendor);
         bytes = stream.ToArray();
 
-        return File(bytes, MimeTypes.ApplicationPdf, string.Format(await _localizationService.GetResourceAsync("PDFInvoice.FileName"), order.CustomOrderNumber) + ".pdf");
+        return File(bytes, MimeTypes.ApplicationPdf, "AFM-"+DateTime.UtcNow.ToString("dd-MM-yyyy")+ ".pdf");
     }
 
     [HttpPost, ActionName("PdfInvoice")]
@@ -2857,5 +2905,54 @@ public partial class OrderController : BaseAdminController
         return Json(result);
     }
 
+    #endregion
+
+    #region Custom Code
+
+    public virtual async Task<IActionResult> Create()
+    {
+        if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageOrders))
+            return AccessDeniedView();
+
+        //prepare model
+        var model = await _orderModelFactory.PrepareOrderModelAsync(new OrderModel(), null);
+
+        return View(model);
+    }
+
+    [HttpPost, ParameterBasedOnFormName("save-continue", "continueEditing")]
+    public virtual async Task<IActionResult> Create(OrderModel model, bool continueEditing)
+    {
+        if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManageOrders))
+            return AccessDeniedView();
+
+        if (ModelState.IsValid)
+        {
+            var order = new Order();
+            order.CreatedOnUtc = DateTime.UtcNow;
+            order.CustomerId = model.CustomerId;
+            order.OrderStatusId = model.OrderStatusId;
+            order.PaymentStatusId = model.PaymentStatusId;
+            order.CustomOrderNumber = _customNumberFormatter.GenerateOrderCustomNumber(order);
+            var customer = await _customerService.GetCustomerByIdAsync(model.CustomerId);
+            order.BillingAddressId = customer != null ? (int)customer.BillingAddressId : 0;
+            order.ShippingAddressId = customer != null ? customer.ShippingAddressId : 0;
+            await _orderService.InsertOrderAsync(order);
+            order.CustomOrderNumber = order.Id.ToString();
+            var currency = await _currencyService.GetCurrencyByCodeAsync("INR");
+            order.CustomerCurrencyCode = currency != null ? currency.CurrencyCode : string.Empty;
+            await _orderService.UpdateOrderAsync(order);
+            _notificationService.SuccessNotification(await _localizationService.GetResourceAsync("Admin.Order.Added"));
+
+            if (!continueEditing)
+                return RedirectToAction("List");
+
+            return RedirectToAction("Edit", new { id = order.Id });
+        }
+
+        //prepare model
+        model = await _orderModelFactory.PrepareOrderModelAsync(model, null, true);
+        return View(model);
+    }
     #endregion
 }

@@ -8,6 +8,7 @@ using Nop.Core.Configuration;
 using Nop.Core.Events;
 using Nop.Core.Infrastructure;
 using Nop.Data;
+using Nop.Service.Helpers;
 using Nop.Services.Affiliates;
 using Nop.Services.Attributes;
 using Nop.Services.Authentication;
@@ -313,6 +314,8 @@ public partial class NopStartup : INopStartup
         var useAutofac = appSettings.Get<CommonConfig>().UseAutofac;
         if (!useAutofac)
             services.AddScoped(typeof(Lazy<>), typeof(LazyInstance<>));
+
+        services.AddScoped<IDropDownValueHelper, DropDownValueHelper>();
     }
 
     /// <summary>

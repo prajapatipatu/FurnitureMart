@@ -9,11 +9,14 @@ using Nop.Core.Domain.Customers;
 using Nop.Core.Domain.Forums;
 using Nop.Core.Domain.Gdpr;
 using Nop.Core.Domain.Messages;
+using Nop.Core.Domain.Orders;
+using Nop.Core.Domain.Shipping;
 using Nop.Core.Domain.Tax;
 using Nop.Core.Events;
 using Nop.Services.Attributes;
 using Nop.Services.Common;
 using Nop.Services.Customers;
+using Nop.Services.Directory;
 using Nop.Services.ExportImport;
 using Nop.Services.Forums;
 using Nop.Services.Gdpr;
@@ -72,6 +75,9 @@ public partial class CustomerController : BaseAdminController
     protected readonly IWorkflowMessageService _workflowMessageService;
     protected readonly TaxSettings _taxSettings;
     private static readonly char[] _separator = [','];
+    protected readonly OrderSettings _orderSettings;
+    protected readonly ICountryService _countryService;
+    protected readonly IStateProvinceService _stateProvinceService;
 
     #endregion
 
@@ -109,7 +115,10 @@ public partial class CustomerController : BaseAdminController
         ITaxService taxService,
         IWorkContext workContext,
         IWorkflowMessageService workflowMessageService,
-        TaxSettings taxSettings)
+        TaxSettings taxSettings,
+        OrderSettings orderSettings,
+        ICountryService countryService,
+        IStateProvinceService stateProvinceService)
     {
         _customerSettings = customerSettings;
         _dateTimeSettings = dateTimeSettings;
@@ -144,6 +153,9 @@ public partial class CustomerController : BaseAdminController
         _workContext = workContext;
         _workflowMessageService = workflowMessageService;
         _taxSettings = taxSettings;
+        _orderSettings = orderSettings;
+        _countryService = countryService;
+        _stateProvinceService = stateProvinceService;
     }
 
     #endregion
@@ -331,7 +343,7 @@ public partial class CustomerController : BaseAdminController
         if (!string.IsNullOrEmpty(customerRolesError))
         {
             ModelState.AddModelError(string.Empty, customerRolesError);
-            _notificationService.ErrorNotification(customerRolesError);
+            //_notificationService.ErrorNotification(customerRolesError);
         }
 
         // Ensure that valid email address is entered if Registered role is checked to avoid registered customers with empty email address
@@ -340,7 +352,7 @@ public partial class CustomerController : BaseAdminController
         {
             ModelState.AddModelError(string.Empty, await _localizationService.GetResourceAsync("Admin.Customers.Customers.ValidEmailRequiredRegisteredRole"));
 
-            _notificationService.ErrorNotification(await _localizationService.GetResourceAsync("Admin.Customers.Customers.ValidEmailRequiredRegisteredRole"));
+           // _notificationService.ErrorNotification(await _localizationService.GetResourceAsync("Admin.Customers.Customers.ValidEmailRequiredRegisteredRole"));
         }
 
         //custom customer attributes
@@ -360,6 +372,7 @@ public partial class CustomerController : BaseAdminController
             var customer = model.ToEntity<Customer>();
             var currentStore = await _storeContext.GetCurrentStoreAsync();
 
+            customer.GSTNumber = model.GSTNumber;
             customer.CustomerGuid = Guid.NewGuid();
             customer.CreatedOnUtc = DateTime.UtcNow;
             customer.LastActivityDateUtc = DateTime.UtcNow;
@@ -397,6 +410,32 @@ public partial class CustomerController : BaseAdminController
             if (_customerSettings.FaxEnabled)
                 customer.Fax = model.Fax;
             customer.CustomCustomerAttributesXML = customerAttributesXml;
+
+            var billingAddress = new Address();
+            billingAddress.FirstName = _orderSettings.AFMFullName;
+            billingAddress.PhoneNumber = _orderSettings.AFMMobileNumber;
+            var country = await _countryService.GetCountryByTwoLetterIsoCodeAsync("IN");
+            billingAddress.CountryId = country != null ? country.Id : 0;
+            var state = await _stateProvinceService.GetStateProvinceByAbbreviationAsync("GJ", country?.Id);
+            billingAddress.StateProvinceId = state != null ? state.Id : 0;
+            billingAddress.ZipPostalCode = "394650";
+            billingAddress.City = "Vyara";
+            billingAddress.Address1 = _orderSettings.AFMAddress;
+            await _addressService.InsertAddressAsync(billingAddress);
+            customer.BillingAddressId = billingAddress.Id;
+
+            var shippingAddress = new Address();
+            shippingAddress.FirstName = model.FirstName;
+            shippingAddress.LastName = model.LastName;
+            shippingAddress.PhoneNumber = model.Phone;
+            shippingAddress.CountryId = model.CountryId;
+            shippingAddress.StateProvinceId = model.StateProvinceId;
+            shippingAddress.ZipPostalCode = model.ZipPostalCode;
+            shippingAddress.Address1 = model.StreetAddress;
+            shippingAddress.City = model.City;
+            shippingAddress.Address2 = model.StreetAddress2;
+            await _addressService.InsertAddressAsync(shippingAddress);
+            customer.ShippingAddressId = shippingAddress.Id;
 
             await _customerService.InsertCustomerAsync(customer);
 
@@ -538,7 +577,7 @@ public partial class CustomerController : BaseAdminController
         if (!string.IsNullOrEmpty(customerRolesError))
         {
             ModelState.AddModelError(string.Empty, customerRolesError);
-            _notificationService.ErrorNotification(customerRolesError);
+            //_notificationService.ErrorNotification(customerRolesError);
         }
 
         // Ensure that valid email address is entered if Registered role is checked to avoid registered customers with empty email address
@@ -546,7 +585,7 @@ public partial class CustomerController : BaseAdminController
             !CommonHelper.IsValidEmail(model.Email))
         {
             ModelState.AddModelError(string.Empty, await _localizationService.GetResourceAsync("Admin.Customers.Customers.ValidEmailRequiredRegisteredRole"));
-            _notificationService.ErrorNotification(await _localizationService.GetResourceAsync("Admin.Customers.Customers.ValidEmailRequiredRegisteredRole"));
+            //_notificationService.ErrorNotification(await _localizationService.GetResourceAsync("Admin.Customers.Customers.ValidEmailRequiredRegisteredRole"));
         }
 
         //custom customer attributes
@@ -566,6 +605,7 @@ public partial class CustomerController : BaseAdminController
             {
                 customer.AdminComment = model.AdminComment;
                 customer.IsTaxExempt = model.IsTaxExempt;
+                customer.GSTNumber = model.GSTNumber;
 
                 //prevent deactivation of the last active administrator
                 if (!await _customerService.IsAdminAsync(customer) || model.Active || await SecondAdminAccountExistsAsync(customer))
@@ -710,6 +750,36 @@ public partial class CustomerController : BaseAdminController
                         if (currentCustomerRoleIds.Any(roleId => roleId == customerRole.Id))
                             await _customerService.RemoveCustomerRoleMappingAsync(customer, customerRole);
                     }
+                }
+
+                var shippingAddress = await _addressService.GetAddressByIdAsync((int)customer.ShippingAddressId);
+                if(shippingAddress != null)
+                {
+                    shippingAddress.FirstName = model.FirstName;
+                    shippingAddress.LastName = model.LastName;
+                    shippingAddress.PhoneNumber = model.Phone;
+                    shippingAddress.CountryId = model.CountryId;
+                    shippingAddress.StateProvinceId = model.StateProvinceId;
+                    shippingAddress.ZipPostalCode = model.ZipPostalCode;
+                    shippingAddress.Address1 = model.StreetAddress;
+                    shippingAddress.City = model.City;
+                    shippingAddress.Address2 = model.StreetAddress2;
+                    await _addressService.UpdateAddressAsync(shippingAddress);
+                }
+                else
+                {
+                    var address = new Address();
+                    address.FirstName = model.FirstName;
+                    address.LastName = model.LastName;
+                    address.PhoneNumber = model.Phone;
+                    address.CountryId = model.CountryId;
+                    address.StateProvinceId = model.StateProvinceId;
+                    address.ZipPostalCode = model.ZipPostalCode;
+                    address.Address1 = model.StreetAddress;
+                    address.City = model.City;
+                    address.Address2 = model.StreetAddress2;
+                    await _addressService.InsertAddressAsync(address);
+                    customer.ShippingAddressId = address.Id;
                 }
 
                 await _customerService.UpdateCustomerAsync(customer);

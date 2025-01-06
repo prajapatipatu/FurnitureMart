@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Nop.Core.Domain.Tax;
 using Nop.Web.Areas.Admin.Models.Common;
 using Nop.Web.Framework.Models;
@@ -25,6 +26,8 @@ public partial record OrderModel : BaseNopEntityModel
         BillingAddress = new AddressModel();
         ShippingAddress = new AddressModel();
         PickupAddress = new AddressModel();
+        AvailableCustomers = new List<SelectListItem>();
+        AvailablePaymentStatus = new List<SelectListItem>();
     }
 
     #endregion
@@ -47,6 +50,9 @@ public partial record OrderModel : BaseNopEntityModel
     //customer info
     [NopResourceDisplayName("Admin.Orders.Fields.Customer")]
     public int CustomerId { get; set; }
+    public IList<SelectListItem> AvailableCustomers { get; set; }
+    public bool CustomerRequired { get; set; }
+    public IList<SelectListItem> AvailablePaymentStatus { get; set; }
     [NopResourceDisplayName("Admin.Orders.Fields.Customer")]
     public string CustomerInfo { get; set; }
     [NopResourceDisplayName("Admin.Orders.Fields.CustomerEmail")]
@@ -238,7 +244,6 @@ public partial record OrderModel : BaseNopEntityModel
     public OrderShipmentSearchModel OrderShipmentSearchModel { get; set; }
 
     public OrderNoteSearchModel OrderNoteSearchModel { get; set; }
-
     #endregion
 
     #region Nested Classes
