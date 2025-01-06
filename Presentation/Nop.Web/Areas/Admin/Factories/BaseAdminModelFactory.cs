@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using LinqToDB.Reflection;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Nop.Core.Caching;
 using Nop.Core.Domain.Catalog;
 using Nop.Core.Domain.Discounts;
@@ -57,6 +58,7 @@ public partial class BaseAdminModelFactory : IBaseAdminModelFactory
     protected readonly ITaxCategoryService _taxCategoryService;
     protected readonly ITopicTemplateService _topicTemplateService;
     protected readonly IVendorService _vendorService;
+    protected readonly IDropDownValueHelper _dropDownValueHelper;
 
     #endregion
 
@@ -84,7 +86,8 @@ public partial class BaseAdminModelFactory : IBaseAdminModelFactory
         IStoreService storeService,
         ITaxCategoryService taxCategoryService,
         ITopicTemplateService topicTemplateService,
-        IVendorService vendorService)
+        IVendorService vendorService,
+        IDropDownValueHelper dropDownValueHelper)
     {
         _categoryService = categoryService;
         _categoryTemplateService = categoryTemplateService;
@@ -109,6 +112,7 @@ public partial class BaseAdminModelFactory : IBaseAdminModelFactory
         _taxCategoryService = taxCategoryService;
         _topicTemplateService = topicTemplateService;
         _vendorService = vendorService;
+        _dropDownValueHelper = dropDownValueHelper;
     }
 
     #endregion
@@ -342,7 +346,7 @@ public partial class BaseAdminModelFactory : IBaseAdminModelFactory
 
         //prepare available countries
         var availableCountries = await _countryService.GetAllCountriesAsync(showHidden: true);
-        foreach (var country in availableCountries)
+        foreach (var country in availableCountries.Where(x=>x.Name == "India"))
         {
             items.Add(new SelectListItem { Value = country.Id.ToString(), Text = country.Name });
         }
@@ -983,5 +987,20 @@ public partial class BaseAdminModelFactory : IBaseAdminModelFactory
         await PrepareDefaultItemAsync(items, withSpecialDefaultItem, defaultItemText, defaultItemValue);
     }
 
+    public virtual async Task PrepareOrderPaymentStatusAsync(IList<SelectListItem> items, bool withSpecialDefaultItem = true, string defaultItemText = null)
+    {
+        if (items == null)
+            throw new ArgumentNullException(nameof(items));
+
+        //prepare available payment status
+        var methods = await _dropDownValueHelper.GetDropDownValue("OrderSettings.PaymentStatus");
+        foreach (var method in methods)
+        {
+            items.Add(new SelectListItem { Text = method.ToString(), Value = method.ToString() });
+        }
+
+        //insert special item for the default value
+        await PrepareDefaultItemAsync(items, withSpecialDefaultItem, defaultItemText);
+    }
     #endregion
 }

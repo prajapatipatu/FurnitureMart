@@ -1,0 +1,33 @@
+@model OrderModel
+
+@using Nop.Core.Domain.Orders;
+@using Nop.Core.Domain.Payments
+@using Nop.Services
+
+<div class="card-body">
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="CustomerId" asp-required="@Model.CustomerRequired" />
+        </div>
+        <div class="col-md-9">
+            <nop-select asp-for="CustomerId" asp-items="Model.AvailableCustomers" class="form-select form-control" />
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="OrderStatusId" />
+        </div>
+        <div class="col-md-9">
+            <nop-select asp-for="OrderStatusId" asp-items="@(await ((OrderStatus) Model.OrderStatusId).ToSelectListAsync())" class="form-select form-control" />
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-md-3">
+            <nop-label asp-for="PaymentStatusId" />
+        </div>
+        <div class="col-md-9">
+            <nop-select asp-for="PaymentStatusId" asp-items="@(await ((PaymentStatus) Model.PaymentStatusId).ToSelectListAsync())" class="form-select form-control" />
+        </div>
+    </div>
+</div>

@@ -18,6 +18,7 @@ public partial class NopLabelTagHelper : TagHelper
 
     protected const string FOR_ATTRIBUTE_NAME = "asp-for";
     protected const string DISPLAY_HINT_ATTRIBUTE_NAME = "asp-display-hint";
+    protected const string DISPLAY_REQUIRED = "asp-required";
 
     #endregion
 
@@ -85,7 +86,11 @@ public partial class NopLabelTagHelper : TagHelper
 
             //add label
             output.Content.SetHtmlContent(tagBuilder);
-
+            // add Required
+            if(Required)
+            {
+                output.Content.AppendHtml("<span class=\"required\">*</span>");
+            }
             //add hint
             if (DisplayHint && !string.IsNullOrEmpty(resourceName))
             {
@@ -99,6 +104,7 @@ public partial class NopLabelTagHelper : TagHelper
                     output.Content.AppendHtml(hintContent);
                 }
             }
+
         }
     }
 
@@ -119,6 +125,12 @@ public partial class NopLabelTagHelper : TagHelper
     /// </summary>
     [HtmlAttributeName(DISPLAY_HINT_ATTRIBUTE_NAME)]
     public bool DisplayHint { get; set; } = true;
+
+    /// <summary>
+    /// Indicates whether the field is required
+    /// </summary>
+    [HtmlAttributeName(DISPLAY_REQUIRED)]
+    public bool Required { get; set; }
 
     /// <summary>
     /// ViewContext

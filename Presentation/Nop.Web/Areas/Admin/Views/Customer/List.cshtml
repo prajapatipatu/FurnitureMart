@@ -33,19 +33,6 @@
                 </button>
                 <ul class="dropdown-menu" role="menu">
                     <li class="dropdown-item">
-                        <button asp-action="ExportXML" type="submit" name="exportxml-all">
-                            <i class="far fa-file-code"></i>
-                            @T("Admin.Common.ExportToXml.All")
-                        </button>
-                    </li>
-                    <li class="dropdown-item">
-                        <button type="button" id="exportxml-selected">
-                            <i class="far fa-file-code"></i>
-                            @T("Admin.Common.ExportToXml.Selected")
-                        </button>
-                    </li>
-                    <li class="dropdown-divider"></li>
-                    <li class="dropdown-item">
                         <button asp-action="ExportExcel" type="submit" name="exportexcel-all">
                             <i class="far fa-file-excel"></i>
                             @T("Admin.Common.ExportToExcel.All")
@@ -60,10 +47,6 @@
                 </ul>
 
             </div>
-            <button type="button" name="importexcel" class="btn bg-olive" data-toggle="modal" data-target="#importexcel-window">
-                <i class="fas fa-upload"></i>
-                @T("Admin.Common.Import")
-            </button>
             @await Component.InvokeAsync(typeof(AdminWidgetViewComponent), new { widgetZone = AdminWidgetZones.CustomerListButtons, additionalData = Model })
         </div>
     </div>
@@ -90,17 +73,6 @@
                                                 <nop-editor asp-for="SearchEmail" />
                                             </div>
                                         </div>
-                                        @if (Model.UsernamesEnabled)
-                                        {
-                                            <div class="form-group row">
-                                                <div class="col-md-4">
-                                                    <nop-label asp-for="SearchUsername" />
-                                                </div>
-                                                <div class="col-md-8">
-                                                    <nop-editor asp-for="SearchUsername" />
-                                                </div>
-                                            </div>
-                                        }
                                         <div class="form-group row">
                                             <div class="col-md-4">
                                                 <nop-label asp-for="SearchFirstName" />
@@ -117,72 +89,8 @@
                                                 <nop-editor asp-for="SearchLastName" />
                                             </div>
                                         </div>
-                                        @if (Model.DateOfBirthEnabled)
-                                        {
-                                            <div class="form-group row">
-                                                <div class="col-md-4">
-                                                    <nop-label asp-for="SearchDayOfBirth" />
-                                                </div>
-                                                <div class="col-md-8">
-                                                    @{
-                                                        var monthOfBirthValues = new List<SelectListItem>();
-                                                        monthOfBirthValues.Add(new SelectListItem { Text = T("Admin.Customers.Customers.List.SearchDateOfBirth.Month").Text, Value = "0" });
-                                                        for (var i = 1; i <= 12; i++)
-                                                        {
-                                                            monthOfBirthValues.Add(new SelectListItem { Text = i.ToString(CultureInfo.InvariantCulture), Value = i.ToString(CultureInfo.InvariantCulture) });
-                                                        }
-                                                        var dayOfBirthValues = new List<SelectListItem>();
-                                                        dayOfBirthValues.Add(new SelectListItem { Text = T("Admin.Customers.Customers.List.SearchDateOfBirth.Day").Text, Value = "0" });
-                                                        for (var i = 1; i <= 31; i++)
-                                                        {
-                                                            dayOfBirthValues.Add(new SelectListItem { Text = i.ToString(CultureInfo.InvariantCulture), Value = i.ToString(CultureInfo.InvariantCulture) });
-                                                        }
-                                                    }
-                                                    <div class="row">
-                                                        <div class="col-md-6">
-                                                            <nop-select asp-for="SearchMonthOfBirth" asp-items="@monthOfBirthValues" />
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <nop-select asp-for="SearchDayOfBirth" asp-items="@dayOfBirthValues" />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        }
-                                        <div class="form-group row">
-                                            <div class="col-md-4">
-                                                <nop-label asp-for="SearchRegistrationDateFrom" />
-                                            </div>
-                                            <div class="col-md-8">
-                                                <nop-editor asp-for="SearchRegistrationDateFrom" />
-                                            </div>
-                                        </div>
-                                        <div class="form-group row">
-                                            <div class="col-md-4">
-                                                <nop-label asp-for="SearchRegistrationDateTo" />
-                                            </div>
-                                            <div class="col-md-8">
-                                                <nop-editor asp-for="SearchRegistrationDateTo" />
-                                            </div>
-                                        </div>
                                     </div>
-                                    <div class="col-md-7">
-                                        <div class="form-group row">
-                                            <div class="col-md-4">
-                                                <nop-label asp-for="SearchLastActivityFrom" />
-                                            </div>
-                                            <div class="col-md-8">
-                                                <nop-editor asp-for="SearchLastActivityFrom" />
-                                            </div>
-                                        </div>
-                                        <div class="form-group row">
-                                            <div class="col-md-4">
-                                                <nop-label asp-for="SearchLastActivityTo" />
-                                            </div>
-                                            <div class="col-md-8">
-                                                <nop-editor asp-for="SearchLastActivityTo" />
-                                            </div>
-                                        </div>
+                                    <div class="col-md-7">                                        
                                         @if (Model.CompanyEnabled)
                                         {
                                             <div class="form-group row">
@@ -205,25 +113,6 @@
                                                 </div>
                                             </div>
                                         }
-                                        @if (Model.ZipPostalCodeEnabled)
-                                        {
-                                            <div class="form-group row">
-                                                <div class="col-md-4">
-                                                    <nop-label asp-for="SearchZipPostalCode" />
-                                                </div>
-                                                <div class="col-md-8">
-                                                    <nop-editor asp-for="SearchZipPostalCode" />
-                                                </div>
-                                            </div>
-                                        }
-                                        <div class="form-group row">
-                                            <div class="col-md-4">
-                                                <nop-label asp-for="SearchIpAddress" />
-                                            </div>
-                                            <div class="col-md-8">
-                                                <nop-editor asp-for="SearchIpAddress" />
-                                            </div>
-                                        </div>
                                         <div class="form-group row">
                                             <div class="col-md-4">
                                                 <nop-label asp-for="SelectedCustomerRoleIds" />
@@ -263,7 +152,6 @@
 
                     <div class="card card-default">
                         <div class="card-body">
-                            <nop-doc-reference asp-string-resource="@T("Admin.Documentation.Reference.Customers", Docs.Customers + Utm.OnAdmin)" />
 
                             @{
                                 var gridModel = new DataTablesModel

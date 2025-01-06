@@ -263,6 +263,8 @@ public partial interface ILocalizationService
     /// <returns>A task that represents the asynchronous operation</returns>
     Task DeleteLocaleResourcesAsync(IList<string> resourceNames, int? languageId = null);
 
+    Task DeleteLocaleResourceEndWithPrefixAsync(string resourceNamePrefix, int? languageId = null);
+
     /// <summary>
     /// Delete locale resources
     /// </summary>

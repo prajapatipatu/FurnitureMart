@@ -1937,13 +1937,13 @@ public partial class ExportManager : IExportManager
     {
         var vendors = await _vendorService.GetVendorsByCustomerIdsAsync(customers.Select(c => c.Id).ToArray());
 
-        object getVendor(Customer customer)
-        {
-            if (!_catalogSettings.ExportImportRelatedEntitiesByName)
-                return customer.VendorId;
+        //object getVendor(Customer customer)
+        //{
+        //    if (!_catalogSettings.ExportImportRelatedEntitiesByName)
+        //        return customer.VendorId;
 
-            return vendors.FirstOrDefault(v => v.Id == customer.VendorId)?.Name ?? string.Empty;
-        }
+        //    return vendors.FirstOrDefault(v => v.Id == customer.VendorId)?.Name ?? string.Empty;
+        //}
 
         async Task<object> getCountry(Customer customer)
         {
@@ -1975,18 +1975,10 @@ public partial class ExportManager : IExportManager
             new PropertyByName<Customer, Language>("CustomerId", (p, l) => p.Id),
             new PropertyByName<Customer, Language>("CustomerGuid", (p, l) => p.CustomerGuid),
             new PropertyByName<Customer, Language>("Email", (p, l) => p.Email),
-            new PropertyByName<Customer, Language>("Username", (p, l) => p.Username),
-            new PropertyByName<Customer, Language>("IsTaxExempt", (p, l) => p.IsTaxExempt),
-            new PropertyByName<Customer, Language>("AffiliateId", (p, l) => p.AffiliateId),
-            new PropertyByName<Customer, Language>("Vendor",  (p, l) => getVendor(p)),
+            new PropertyByName<Customer, Language>("Username", (p, l) => string.IsNullOrEmpty(p.Username) ? $"{p.FirstName} {p.LastName}" : p.Username),
             new PropertyByName<Customer, Language>("Active", (p, l) => p.Active),
             new PropertyByName<Customer, Language>("CustomerRoles",  async (p, l) =>  string.Join(", ",
                 (await _customerService.GetCustomerRolesAsync(p)).Select(role => _catalogSettings.ExportImportRelatedEntitiesByName ? role.Name : role.Id.ToString()))),
-            new PropertyByName<Customer, Language>("IsGuest", async (p, l) => await _customerService.IsGuestAsync(p)),
-            new PropertyByName<Customer, Language>("IsRegistered", async (p, l) => await _customerService.IsRegisteredAsync(p)),
-            new PropertyByName<Customer, Language>("IsAdministrator", async (p, l) => await _customerService.IsAdminAsync(p)),
-            new PropertyByName<Customer, Language>("IsForumModerator", async (p, l) => await _customerService.IsForumModeratorAsync(p)),
-            new PropertyByName<Customer, Language>("IsVendor", async (p, l) => await _customerService.IsVendorAsync(p)),
             new PropertyByName<Customer, Language>("CreatedOnUtc", (p, l) => p.CreatedOnUtc),
             //attributes
             new PropertyByName<Customer, Language>("FirstName", (p, l) => p.FirstName, !_customerSettings.FirstNameEnabled),

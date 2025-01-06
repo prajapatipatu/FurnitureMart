@@ -884,6 +884,15 @@ public partial class LocalizationService : ILocalizationService
         await _staticCacheManager.RemoveByPrefixAsync(NopEntityCacheDefaults<LocaleStringResource>.Prefix);
     }
 
+    public virtual async Task DeleteLocaleResourceEndWithPrefixAsync(string resourceNamePrefix, int? languageId = null)
+    {
+        await _lsrRepository.DeleteAsync(locale => (!languageId.HasValue || locale.LanguageId == languageId.Value) &&
+            !string.IsNullOrEmpty(locale.ResourceName) &&
+            locale.ResourceName.EndsWith(resourceNamePrefix, StringComparison.InvariantCultureIgnoreCase));
+
+        //clear cache
+        await _staticCacheManager.RemoveByPrefixAsync(NopEntityCacheDefaults<LocaleStringResource>.Prefix);
+    }
     /// <summary>
     /// Delete locale resources
     /// </summary>

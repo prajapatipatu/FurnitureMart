@@ -1,4 +1,14 @@
-﻿/* COMMON */
+﻿/*start custom Css*/
+.mybg {
+    background-color: #000022;
+}
+.form-control, .form-select {
+    font-size: 18px;
+}
+/*end custom css*/
+
+
+/* COMMON */
 .content, .content-wrapper > .content {
   padding: 0 10px 55px 10px;
 }
@@ -236,12 +246,12 @@ i.false-icon {
 }
 
 .card.card-secondary {
-  margin-bottom: 10px;
-  border-top: 3px solid #00c0ef;
-  border-left: none;
-  border-right: none;
-  border-bottom: none;
-  box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+    margin-bottom: 10px;
+    border-top: 3px solid #007bff;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.1);
 }
 
 .card.card-secondary.collapsed-card {
@@ -257,7 +267,7 @@ i.false-icon {
   padding-right: 30px;
   position: relative;
   cursor: pointer;
-  background-color: #ffffff;
+  background-color: #e1e4f1;
   color: #444;
   border-bottom: 1px solid #f4f4f4;
 }
