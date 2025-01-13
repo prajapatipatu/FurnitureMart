@@ -1196,6 +1196,18 @@ public partial class OrderModelFactory : IOrderModelFactory
             model.CreatedOn = await _dateTimeHelper.ConvertToUserTimeAsync(order.CreatedOnUtc, DateTimeKind.Utc);
             model.CustomValues = _paymentService.DeserializeCustomValues(order);
 
+            model.ShippedToCountryId = order.ShippedToCountryId;
+            model.ShippedToStateId = order.ShippedToStateId;
+            model.ShippedToAddress = order.ShippedToAddress;
+            model.ShippedToCity = order.ShippedToCity;
+            model.ShippedToZipCode = order.ShippedToZipCode;
+            model.ShippedToGSTNumber = order.ShippedToGSTNumber;
+
+            model.TransportionMode = order.TransportionMode;
+            model.VehicleNumber = order.VehicleNumber;
+            model.DateOfSupply = order.DateOfSupply;
+            model.PlaceOfSupply = order.PlaceOfSupply;
+
             var affiliate = await _affiliateService.GetAffiliateByIdAsync(order.AffiliateId);
             if (affiliate != null)
             {
@@ -1231,7 +1243,10 @@ public partial class OrderModelFactory : IOrderModelFactory
         var customers = await _customerService.GetAllCustomersAsync(customerRoleIds: customerRoleIds.ToArray());
         model.AvailableCustomers = customers.Where(x => x.Active && !string.IsNullOrEmpty(x.Email)).Select(customer => new SelectListItem { Text = customer.FirstName +" "+ customer.LastName , Value = customer.Id.ToString() }).ToList();
         model.AvailableCustomers.Insert(0, new SelectListItem { Text = await _localizationService.GetResourceAsync("Admin.Common.Select"), Value = "0", Selected = true });
-        
+
+        await _baseAdminModelFactory.PrepareCountriesAsync(model.AvailableCountries);
+        await _baseAdminModelFactory.PrepareStatesAndProvincesAsync(model.AvailableStates, model.ShippedToCountryId == 0 ? null : (int?)model.ShippedToCountryId);
+
         await _baseAdminModelFactory.PrepareOrderPaymentStatusAsync(model.AvailablePaymentStatus, true, await _localizationService.GetResourceAsync("Admin.Common.Select"));
         
         model.CustomerRequired = _orderSettings.CustomerRequired;

@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using System.IO.Compression;
 using System.Net;
+using DocumentFormat.OpenXml.Bibliography;
 using Nop.Core;
 using Nop.Core.Domain.Catalog;
 using Nop.Core.Domain.Common;
@@ -29,6 +30,7 @@ using Nop.Services.Shipping;
 using Nop.Services.Stores;
 using Nop.Services.Vendors;
 using Org.BouncyCastle.Math;
+using Org.BouncyCastle.Utilities.Net;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 
@@ -163,43 +165,35 @@ public partial class PdfService : IPdfService
     {
         var addressResult = new AddressItem();
 
-        var billingAddress = await _addressService.GetAddressByIdAsync(order.BillingAddressId);
+        if (order.ShippingAddressId == null || await _addressService.GetAddressByIdAsync(order.ShippingAddressId.Value) is not Address billingAddress)
+            throw new NopException($"Shipping is required, but address is not available. Order ID = {order.Id}");
 
-        if (_addressSettings.CompanyEnabled && !string.IsNullOrEmpty(billingAddress.Company))
-            addressResult.Company = billingAddress.Company;
+        var customer = await _customerService.GetCustomerByIdAsync(order.CustomerId);
+        var billAddress = new List<string>();
 
         addressResult.Name = $"{billingAddress.FirstName} {billingAddress.LastName}";
-        addressResult.PaymentMethod = _orderSettings.AFMGSTNumber;
+        addressResult.PaymentMethod = customer != null ? customer.GSTNumber : string.Empty;
+        addressResult.Phone = customer != null ? customer.Phone : string.Empty;
 
-        if (_addressSettings.PhoneEnabled)
-            addressResult.Phone = billingAddress.PhoneNumber;
+        if (!string.IsNullOrEmpty(billingAddress.Address1))
+            billAddress.Add(billingAddress.Address1);
 
-        if (_addressSettings.FaxEnabled && !string.IsNullOrEmpty(billingAddress.FaxNumber))
-            addressResult.Fax = billingAddress.FaxNumber;
+        if (_addressSettings.StreetAddress2Enabled && !string.IsNullOrEmpty(billingAddress.Address2))
+            billAddress.Add(billingAddress.Address2);
 
-        if (_addressSettings.StreetAddressEnabled)
-            addressResult.Address = billingAddress.Address1;
+        if (_addressSettings.CityEnabled && !string.IsNullOrEmpty(billingAddress.City))
+            billAddress.Add(billingAddress.City);
 
-        //if (_addressSettings.StreetAddress2Enabled && !string.IsNullOrEmpty(billingAddress.Address2))
-        //    addressResult.Address2 = billingAddress.Address2;
+        var stateProvince = await _stateProvinceService.GetStateProvinceByAddressAsync(billingAddress);
+        billAddress.Add(stateProvince != null ? await _localizationService.GetLocalizedAsync(stateProvince, x => x.Name, lang.Id) : string.Empty);
 
-        //if (_addressSettings.CityEnabled && !string.IsNullOrEmpty(billingAddress.City))
-        //    addressResult.City = billingAddress.City;
+        if (_addressSettings.ZipPostalCodeEnabled && !string.IsNullOrEmpty(billingAddress.ZipPostalCode))
+            billAddress.Add(billingAddress.ZipPostalCode);
 
-        //if (_addressSettings.CountyEnabled && !string.IsNullOrEmpty(billingAddress.County))
-        //    addressResult.County = billingAddress.County;
+        var country = await _countryService.GetCountryByIdAsync(Convert.ToInt32(billingAddress.CountryId));
+        billAddress.Add(country != null ? await _localizationService.GetLocalizedAsync(country, x => x.Name, lang.Id) : string.Empty);
 
-        //if (_addressSettings.ZipPostalCodeEnabled && !string.IsNullOrEmpty(billingAddress.ZipPostalCode))
-        //    addressResult.ZipPostalCode = billingAddress.ZipPostalCode;
-
-        //var stateProvince = await _stateProvinceService.GetStateProvinceByAddressAsync(billingAddress);
-        //addressResult.StateProvinceName = stateProvince != null ? await _localizationService.GetLocalizedAsync(stateProvince, x => x.Name, lang.Id) : string.Empty;
-
-        //if (_addressSettings.CountryEnabled && await _countryService.GetCountryByAddressAsync(billingAddress) is Country country)
-        //    addressResult.Country = await _localizationService.GetLocalizedAsync(country, x => x.Name, lang.Id);
-
-        //var (addressLine, _) = await _addressService.FormatAddressAsync(billingAddress, lang.Id);
-        addressResult.AddressLine = billingAddress.Address1;
+        addressResult.AddressLine = string.Join(", ", billAddress);
 
         //VAT number
         if (!string.IsNullOrEmpty(order.VatNumber))
@@ -260,43 +254,35 @@ public partial class PdfService : IPdfService
                 var customer = await _customerService.GetCustomerByIdAsync(order.CustomerId);
 
                 addressResult.Name = $"{shippingAddress.FirstName} {shippingAddress.LastName}";
-                addressResult.ShippingMethod  = customer != null ? customer.GSTNumber : string.Empty;
-                
-                if (_addressSettings.PhoneEnabled)
+                addressResult.ShippingMethod = !string.IsNullOrEmpty(order.ShippedToGSTNumber) ? order.ShippedToGSTNumber : string.Empty;
+
+                if (!string.IsNullOrEmpty(shippingAddress.PhoneNumber))
                     addressResult.Phone = shippingAddress.PhoneNumber;
 
-                if (_addressSettings.FaxEnabled && !string.IsNullOrEmpty(shippingAddress.FaxNumber))
-                    addressResult.Fax = shippingAddress.FaxNumber;
-
                 var shipAddress = new List<string>();
-                
-                if (_addressSettings.StreetAddressEnabled && !string.IsNullOrEmpty(shippingAddress.Address1))
-                    shipAddress.Add(shippingAddress.Address1);
 
-                if (_addressSettings.StreetAddress2Enabled && !string.IsNullOrEmpty(shippingAddress.Address2))
-                    shipAddress.Add(shippingAddress.Address2);
+                if (!string.IsNullOrEmpty(order.ShippedToAddress))
+                    shipAddress.Add(order.ShippedToAddress);
 
-                if (_addressSettings.CityEnabled && !string.IsNullOrEmpty(shippingAddress.City))
-                    shipAddress.Add(shippingAddress.City);
+                if (!string.IsNullOrEmpty(order.ShippedToCity))
+                    shipAddress.Add(order.ShippedToCity);
 
-                var stateProvince = await _stateProvinceService.GetStateProvinceByAddressAsync(shippingAddress);
-                shipAddress.Add(stateProvince != null ? await _localizationService.GetLocalizedAsync(stateProvince, x => x.Name, lang.Id) : string.Empty);
+                var stateProvince = await _stateProvinceService.GetStateProvinceByIdAsync(Convert.ToInt32(order.ShippedToStateId));
+                if(stateProvince != null)
+                    shipAddress.Add(stateProvince.Name);
 
-                if (_addressSettings.ZipPostalCodeEnabled && !string.IsNullOrEmpty(shippingAddress.ZipPostalCode))
-                    shipAddress.Add(shippingAddress.ZipPostalCode);
+                if (!string.IsNullOrEmpty(order.ShippedToZipCode))
+                    shipAddress.Add(order.ShippedToZipCode);
 
-                if (_addressSettings.CountyEnabled && !string.IsNullOrEmpty(shippingAddress.County))
-                    shipAddress.Add(shippingAddress.County);
-
-                
-
-                
-                //if (_addressSettings.CountryEnabled && await _countryService.GetCountryByAddressAsync(shippingAddress) is Country country)
-                //{
-                //    addressResult.Country = await _localizationService.GetLocalizedAsync(country, x => x.Name, lang.Id);
-                //}
+                var country = await _countryService.GetCountryByIdAsync(Convert.ToInt32(order.ShippedToCountryId));
+                if(country != null)
+                    shipAddress.Add(country.Name);
 
                 var (addressLine, _) = await _addressService.FormatAddressAsync(shippingAddress, lang.Id);
+                
+                if(shipAddress.Count == 0)
+                    shipAddress.Add("Same as Billed To");
+
                 addressResult.AddressLine = string.Join(", ", shipAddress);
 
                 //custom attributes
@@ -432,7 +418,7 @@ public partial class PdfService : IPdfService
                     order.CustomerCurrencyCode, language.Id, false);
             }
 
-            
+
             //productItem.Price = await _priceFormatter.FormatPriceAsync(product.Price, true, order.CustomerCurrencyCode, language.Id, true);
             productItem.Price = string.Format(new CultureInfo("en-IN"), "{0:N2}", product.Price);
 
@@ -508,7 +494,7 @@ public partial class PdfService : IPdfService
         result.Shipping = string.Format(new CultureInfo("en-IN"), "{0:N2}", cgst);
         result.Tax = string.Format(new CultureInfo("en-IN"), "{0:N2}", sgst);
         var orderTotalStr = string.Format(new CultureInfo("en-IN"), "{0:N2}", order.OrderSubtotalExclTax + cgst + sgst);
-        result.OrderTotal = $"{await _localizationService.GetResourceAsync("Pdf.OrderTotal", languageId)} {orderTotalStr}"; 
+        result.OrderTotal = $"{await _localizationService.GetResourceAsync("Pdf.OrderTotal", languageId)} {orderTotalStr}";
         //discount (applied to order subtotal)
         //if (order.OrderSubTotalDiscountExclTax > decimal.Zero)
         //{
@@ -729,9 +715,18 @@ public partial class PdfService : IPdfService
                 .Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
                 .ToList();
 
+        var culture = await _workContext.GetWorkingLanguageAsync();  
         var source = new InvoiceSource()
         {
             //StoreUrl = orderStore.Url?.Trim('/'),
+            Name = _orderSettings.AFMFullName,
+            Address = _orderSettings.AFMAddress,
+            PhoneNumber = _orderSettings.AFMMobileNumber,
+            GSTNumber = _orderSettings.AFMGSTNumber,
+            TransportionMode = !string.IsNullOrEmpty(order.TransportionMode) ? order.TransportionMode : string.Empty,
+            VehicleNumber = !string.IsNullOrEmpty(order.VehicleNumber) ? order.VehicleNumber : string.Empty,
+            DateOfSupply = order.DateOfSupply.HasValue ? order.DateOfSupply.Value.ToString("D", new CultureInfo(culture.LanguageCulture)) : string.Empty,
+            PlaceOfSupply = !string.IsNullOrEmpty(order.PlaceOfSupply) ? order.PlaceOfSupply : string.Empty,
             Language = language,
             FontFamily = pdfSettingsByStore.FontFamily,
             OrderDateUser = date,

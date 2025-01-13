@@ -9,7 +9,7 @@ using Nop.Web.Framework.Extensions;
 
 namespace Nop.Web.Framework.Migrations.Orders
 {
-    [NopMigration("2024-11-16 09:58:15", "OrderSettings Migration", UpdateMigrationType.Localization, MigrationProcessType.Update)]
+    [NopMigration("2025-01-13 10:57:00", "OrderSettings Migration", UpdateMigrationType.Localization, MigrationProcessType.Update)]
     public class OrderSettingsMigration :Migration
     {
         public override void Up()
@@ -63,6 +63,22 @@ namespace Nop.Web.Framework.Migrations.Orders
                 ["Admin.Order.Customers.Required"] = "Customer is reuired.",
                 ["Admin.Catalog.Products.Fields.Sku"] ="HSN No",
                 ["Pdf.Product.Sku"] ="HSN No",
+                ["Admin.Orders.Fields.ShippedToCountryId"] = "Shipped To Country",
+                ["Admin.Orders.Fields.ShippedToStateId"] = "Shipped To State",
+                ["Admin.Orders.Fields.ShippedToAddress"] = "Shipped To Address",
+                ["Admin.Orders.Fields.ShippedToCity"] = "Shipped To City",
+                ["Admin.Orders.Fields.ShippedToZipCode"] = "Shipped To Zip code",
+                ["Admin.Orders.Fields.ShippedToGSTNumber"] = "Shipped To GSTNumber",
+
+                ["Pdf.Name"] = "Name",
+                ["Pdf.Address"] = "Address",
+                ["Pdf.PhoneNumber"] = "Phone Number",
+                ["Pdf.GSTNumber"] = "GSTIN",
+                ["Admin.Orders.Fields.TransportionMode"] = "Transportion Mode",
+                ["Admin.Orders.Fields.VehicleNumber"] = "Vehicle Number",
+                ["Admin.Orders.Fields.DateOfSupply"] = "Date Of Supply",
+                ["Admin.Orders.Fields.PlaceOfSupply"] = "Place Of Supply",
+
 
             }, languageId);
 

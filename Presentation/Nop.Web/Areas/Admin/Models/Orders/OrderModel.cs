@@ -28,6 +28,8 @@ public partial record OrderModel : BaseNopEntityModel
         PickupAddress = new AddressModel();
         AvailableCustomers = new List<SelectListItem>();
         AvailablePaymentStatus = new List<SelectListItem>();
+        AvailableCountries = new List<SelectListItem>();
+        AvailableStates = new List<SelectListItem>();
     }
 
     #endregion
@@ -244,6 +246,38 @@ public partial record OrderModel : BaseNopEntityModel
     public OrderShipmentSearchModel OrderShipmentSearchModel { get; set; }
 
     public OrderNoteSearchModel OrderNoteSearchModel { get; set; }
+
+    [NopResourceDisplayName("Admin.Orders.Fields.ShippedToCountryId")]
+    public virtual int? ShippedToCountryId { get; set; }
+    public IList<SelectListItem> AvailableCountries { get; set; }
+
+    [NopResourceDisplayName("Admin.Orders.Fields.ShippedToStateId")]
+    public virtual int? ShippedToStateId { get; set; }
+    public IList<SelectListItem> AvailableStates { get; set; }
+
+    [NopResourceDisplayName("Admin.Orders.Fields.ShippedToAddress")]
+    public virtual string ShippedToAddress { get; set; }
+
+    [NopResourceDisplayName("Admin.Orders.Fields.ShippedToCity")]
+    public virtual string ShippedToCity { get; set; }
+
+    [NopResourceDisplayName("Admin.Orders.Fields.ShippedToZipCode")]
+    public virtual string ShippedToZipCode { get; set; }
+
+    [NopResourceDisplayName("Admin.Orders.Fields.ShippedToGSTNumber")]
+    public virtual string ShippedToGSTNumber { get; set; }
+
+    [NopResourceDisplayName("Admin.Orders.Fields.TransportionMode")]
+    public string TransportionMode { get; set; }
+
+    [NopResourceDisplayName("Admin.Orders.Fields.VehicleNumber")]
+    public string VehicleNumber { get; set; }
+
+    [NopResourceDisplayName("Admin.Orders.Fields.DateOfSupply")]
+    public DateTime? DateOfSupply { get; set; }
+
+    [NopResourceDisplayName("Admin.Orders.Fields.PlaceOfSupply")]
+    public string PlaceOfSupply { get; set; }
     #endregion
 
     #region Nested Classes

@@ -922,6 +922,19 @@ public partial class OrderController : BaseAdminController
             order.BillingAddressId = customer != null ? (int)customer.BillingAddressId : 0;
             order.ShippingAddressId = customer != null ? customer.ShippingAddressId : 0;
             order.CustomOrderNumber = order.Id.ToString();
+
+            order.ShippedToCountryId = model.ShippedToCountryId;
+            order.ShippedToStateId = model.ShippedToStateId;
+            order.ShippedToAddress = model.ShippedToAddress;
+            order.ShippedToCity = model.ShippedToCity;
+            order.ShippedToZipCode = model.ShippedToZipCode;
+            order.ShippedToGSTNumber = model.ShippedToGSTNumber;
+
+            order.TransportionMode = model.TransportionMode;
+            order.VehicleNumber = model.VehicleNumber;
+            order.DateOfSupply = model.DateOfSupply;
+            order.PlaceOfSupply = model.PlaceOfSupply;
+
             await _orderService.UpdateOrderAsync(order);
 
             _notificationService.SuccessNotification(await _localizationService.GetResourceAsync("Admin.Order.Updated"));
@@ -982,7 +995,7 @@ public partial class OrderController : BaseAdminController
         await _pdfService.PrintOrderToPdfAsync(stream, order, _orderSettings.GeneratePdfInvoiceInCustomerLanguage ? null : await _workContext.GetWorkingLanguageAsync(), store: null, vendor: currentVendor);
         bytes = stream.ToArray();
 
-        return File(bytes, MimeTypes.ApplicationPdf, "AFM-"+DateTime.UtcNow.ToString("dd-MM-yyyy")+ ".pdf");
+        return File(bytes, MimeTypes.ApplicationPdf, "AFM-"+DateTime.Now.ToString("dd-MM-yyyy HH-mm-ss") + ".pdf");
     }
 
     [HttpPost, ActionName("PdfInvoice")]
@@ -2937,6 +2950,20 @@ public partial class OrderController : BaseAdminController
             var customer = await _customerService.GetCustomerByIdAsync(model.CustomerId);
             order.BillingAddressId = customer != null ? (int)customer.BillingAddressId : 0;
             order.ShippingAddressId = customer != null ? customer.ShippingAddressId : 0;
+
+            order.ShippedToCountryId = model.ShippedToCountryId;
+            order.ShippedToStateId = model.ShippedToStateId;
+            order.ShippedToAddress = model.ShippedToAddress;
+            order.ShippedToCity = model.ShippedToCity;
+            order.ShippedToZipCode = model.ShippedToZipCode;
+            order.ShippedToGSTNumber = model.ShippedToGSTNumber;
+
+            order.TransportionMode = model.TransportionMode;
+            order.VehicleNumber = model.VehicleNumber;
+            order.DateOfSupply = model.DateOfSupply;
+            order.PlaceOfSupply = model.PlaceOfSupply;
+
+
             await _orderService.InsertOrderAsync(order);
             order.CustomOrderNumber = order.Id.ToString();
             var currency = await _currencyService.GetCurrencyByCodeAsync("INR");

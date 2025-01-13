@@ -43,6 +43,29 @@ public partial class InvoiceSource : DocumentSource
     /// </summary>
     public string StoreUrl { get; set; }
 
+    [DisplayName("Pdf.Name")]
+    public string Name { get; set; }
+
+    [DisplayName("Pdf.Address")]
+    public string Address { get; set; }
+
+    [DisplayName("Pdf.GSTNumber")]
+    public string GSTNumber { get; set; }
+
+    [DisplayName("Pdf.PhoneNumber")]
+    public string PhoneNumber { get; set; }
+
+    [DisplayName("Admin.Orders.Fields.TransportionMode")]
+    public string TransportionMode { get; set; }
+
+    [DisplayName("Admin.Orders.Fields.VehicleNumber")]
+    public string VehicleNumber { get; set; }
+
+    [DisplayName("Admin.Orders.Fields.DateOfSupply")]
+    public string DateOfSupply { get; set; }
+
+    [DisplayName("Admin.Orders.Fields.PlaceOfSupply")]
+    public string PlaceOfSupply { get; set; }
     /// <summary>
     /// Gets or sets a collection of order items
     /// </summary>

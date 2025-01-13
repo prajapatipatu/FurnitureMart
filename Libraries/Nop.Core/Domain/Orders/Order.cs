@@ -1,4 +1,5 @@
-﻿using Nop.Core.Domain.Common;
+﻿using System.ComponentModel;
+using Nop.Core.Domain.Common;
 using Nop.Core.Domain.Payments;
 using Nop.Core.Domain.Shipping;
 using Nop.Core.Domain.Tax;
@@ -292,6 +293,16 @@ public partial class Order : BaseEntity, ISoftDeletedEntity
     /// </summary>
     public virtual int? RedeemedRewardPointsEntryId { get; set; }
 
+    public virtual int? ShippedToCountryId { get; set; }
+    public virtual int? ShippedToStateId { get; set; }
+    public virtual string ShippedToAddress { get; set; }
+    public virtual string ShippedToCity { get; set; }
+    public virtual string ShippedToZipCode { get; set; }
+    public virtual string ShippedToGSTNumber { get; set; }
+    public string TransportionMode { get; set; }
+    public string VehicleNumber { get; set; }
+    public DateTime? DateOfSupply { get; set; }
+    public string PlaceOfSupply { get; set; }
     #endregion
 
     #region Custom properties

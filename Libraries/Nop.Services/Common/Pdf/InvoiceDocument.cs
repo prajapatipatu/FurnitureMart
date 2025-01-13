@@ -115,6 +115,18 @@ public partial class InvoiceDocument : PdfDocument<InvoiceSource>
                         date => date.ToString("D", new CultureInfo(Source.Language.LanguageCulture)),
                         ": "
                     ));
+                column.Item().Text("");                
+                column.Item().Text(t => ComposeField(t, Source, x => x.Name, delimiter : " : "));
+                column.Item().Text(t => ComposeField(t, Source, x => x.Address, delimiter: " : "));
+                column.Item().Text(t => ComposeField(t, Source, x => x.PhoneNumber, delimiter: " : "));
+                column.Item().Text(t => ComposeField(t, Source, x => x.GSTNumber, delimiter: " : "));
+                column.Item().Text("");
+                column.Item().Text(t => ComposeField(t, Source, x => x.TransportionMode, delimiter: " : "));
+                column.Item().Text(t => ComposeField(t, Source, x => x.VehicleNumber, delimiter: " : "));
+                column.Item().Text(t => ComposeField(t, Source, x => x.DateOfSupply, delimiter: " : "));
+                column.Item().Text(t => ComposeField(t, Source, x => x.PlaceOfSupply, delimiter: " : "));
+
+
             });
 
             var logoContainer = row.ConstantItem(65).Height(65);
@@ -261,7 +273,7 @@ public partial class InvoiceDocument : PdfDocument<InvoiceSource>
                 column.Item().Text(card);
 
             column.Item().Text(totals.RewardPoints);
-            column.Item().Text(totals.OrderTotal);
+            column.Item().Text(t => ComposeField(t,totals,x=>x.OrderTotal,delimiter : ": "));
         });
     }
 
